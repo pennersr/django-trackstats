@@ -21,7 +21,7 @@ Welcome to django-trackstats!
 Keep track of your statistics.
 
 Source code
-  http://github.com/pennersr/django-allauth
+  http://github.com/pennersr/django-trackstats
 
 
 Concepts
