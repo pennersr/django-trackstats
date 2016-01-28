@@ -1,0 +1,119 @@
+=============================
+Welcome to django-trackstats!
+=============================
+
+.. image:: https://badge.fury.io/py/django-trackstats.png
+   :target: http://badge.fury.io/py/django-trackstats
+
+.. image:: https://travis-ci.org/pennersr/django-trackstats.png
+   :target: http://travis-ci.org/pennersr/django-trackstats
+
+.. image:: https://img.shields.io/pypi/v/django-trackstats.svg
+   :target: https://pypi.python.org/pypi/django-trackstats
+
+.. image:: https://coveralls.io/repos/pennersr/django-trackstats/badge.png?branch=master
+   :alt: Coverage Status
+   :target: https://coveralls.io/r/pennersr/django-trackstats
+
+.. image:: https://pennersr.github.io/img/bitcoin-badge.svg
+   :target: https://blockchain.info/address/1AJXuBMPHkaDCNX2rwAy34bGgs7hmrePEr
+
+Keep track of your statistics.
+
+Source code
+  http://github.com/pennersr/django-allauth
+
+
+Concepts
+========
+
+The following concepts are used:
+
+Metric
+  A piece of information to keep track of. For example, "Order count",
+  or "Number of users signed up".
+
+Domain
+  Metrics are organized in groups, each group is called a domain. For
+  example you can have a "shopping" domain with metrics such as "Order
+  count", "Items sold", "Products viewed", and a "users" domain with
+  "Login count", "Signup count". Or, in case you are tracking external
+  statistics from social networks, you may introduce a "Twitter"
+  domain, and metrics "Followers count".
+
+Subject
+  When storing statistics we are storing values relating to a specific
+  subject.  For example, when keeping track of the "comment count" per
+  user, the subject is clearly the user. Yet, if you are keeping track
+  of the "Order count" globally for the whole webshop, the subject is
+  less clear. You could decide to choose to use the `Site` instance
+  where your webshop is running at. If not specified, the domain of the
+  metric is used as the subject.
+
+Statistic
+  Used to store the actual values by date, for a specific metric, relating to
+  a specific subject.
+
+Period
+  The time period for which the stored value holds. For example, you
+  can keep track of cumulative, all-time, numbers (`Period.LIFETIME`),
+  store incremental values on a daily basis (`Period.DAY`), or keep
+  track of a rolling count for the last 7 days (`Period.WEEK`).
+
+
+Usage
+=====
+
+First, setup your domains::
+
+    from trackstats.models import Domain
+
+    Domain.objects.SHOPPING = Domain.objects.register(
+        ref='shopping',
+        name='Shopping')
+    Domain.objects.USERS = Domain.object.register(
+        ref='users',
+        name='Users')
+    Domain.objects.TWITTER = Domain.object.register(
+        ref='twitter',
+        name='Twitter')
+
+Define a few metrics::
+
+    from trackstats.models import Domain, Metric
+
+    Metric.objects.SHOPPING_ORDER_COUNT = Metric.objects.register(
+        domain=Domain.objects.SHOPPING,
+        ref='order_count',
+        name='Number of orders sold')
+    Metric.objects.USERS_USER_COUNT = Metric.objects.register(
+        domain=Domain.objects.USERS,
+        ref='user_count',
+        name='Number of users signed up')
+    Metric.objects.TWITTER_FOLLOWER = Metric.objects.register(
+        # Matches Twitter API
+        ref='followers_count',
+        domain=Domain.objects.TWITTER)
+
+Now, let's store some statistics::
+
+    from trackstats.models import Statistic, Domain, Metric, Period
+
+    # All-time, cumulative, statistic
+    n = Order.objects.all().count()
+    Statistic.objects.record(
+        metric=Metric.objects.SHOPPING_ORDER_COUNT,
+        subject=Site.objects.get_current(),
+        value=n,
+        Period=Period.LIFETIME)
+
+    # Users signed up, at a specific date
+    dt = date.today()
+    n = User.objects.filter(
+        date_joined__day=dt.day,
+        date_joined__month=dt.month,
+        date_joined__year=dt.year).count()
+    Statistic.objects.record(
+        metric=Metric.objects.USERS_USER_COUNT,
+        value=n,
+        Period=Period.DAY)
