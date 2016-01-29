@@ -60,6 +60,10 @@ Period
   store incremental values on a daily basis (`Period.DAY`), or keep
   track of a rolling count for the last 7 days (`Period.WEEK`).
 
+Reference IDs
+  Domains and metrics must be assigned unique reference IDs (of type
+  string). Rationale: Having a human readable, non PK based, reference
+  is esential as soon as you are going to export statistics.
 
 Usage
 =====
@@ -152,3 +156,12 @@ The `Statistic` model represents statistics grouped by date, as that
 is the most common use case. If you need to group in a different
 manner, e.g. by country and date, you can use the `AbstractStatistic`
 base class to build just that.
+
+
+Cross-Selling
+=============
+
+If you like this, you may also like:
+
+- django-allauth: https://github.com/pennersr/django-allauth
+- netwell: https://github.com/pennersr/netwell
