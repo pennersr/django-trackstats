@@ -65,13 +65,28 @@ class ObjectsByDateTracker(object):
                     self.date_field + '__month__lte': upto_date.month,
                     self.date_field + '__day__lte': upto_date.day
                 }
-                n = qs.filter(**filter_kwargs).count()
-                Statistic.objects.record(
-                    metric=self.metric,
-                    value=n,
-                    subject=self.subject,
-                    period=self.period,
-                    date=upto_date)
+                if self.subject_model:
+                    vals = qs.filter(**filter_kwargs).values(
+                        self.subject_field).annotate(ts_n=self.aggr_op(
+                            self.aggr_field))
+                    for val in vals:
+                        subject = self.subject_model(
+                            pk=val[self.subject_field])
+                        # TODO: Bulk create
+                        Statistic.objects.record(
+                            metric=self.metric,
+                            value=val['ts_n'],
+                            date=upto_date,
+                            subject=subject,
+                            period=self.period)
+                else:
+                    n = qs.filter(**filter_kwargs).count()
+                    Statistic.objects.record(
+                        metric=self.metric,
+                        value=n,
+                        subject=self.subject,
+                        period=self.period,
+                        date=upto_date)
                 upto_date += timedelta(days=1)
         elif self.period == Period.DAY:
             values_fields = ['ts_date']

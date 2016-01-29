@@ -1,4 +1,5 @@
 import random
+from collections import Counter
 from datetime import date, timedelta, datetime, time
 
 from django.test import TestCase
@@ -80,8 +81,25 @@ class SubjectTrackersTestCase(TestCase):
         self.comment_count = Metric.objects.register(
             domain=domain,
             ref='comment_count')
-        user = self.User.objects.create(username='bla')
-        Comment.objects.create(user=user)
+        users = self.users = [
+            self.User.objects.create(username='user{}'.format(i))
+            for i in range(5)]
+        dt = timezone.now() - timedelta(days=7)
+        self.expected_daily = {}
+        self.expected_lifetime = Counter()
+        while dt.date() != date.today():
+            for user in users:
+                comment_count = random.randint(1, 5)
+                for i in range(comment_count):
+                    Comment.objects.create(
+                        timestamp=dt,
+                        user=user)
+                self.expected_lifetime[
+                    (dt.date(), user.pk)] = self.expected_lifetime[(
+                        dt.date() - timedelta(days=1),
+                        user.pk)] + comment_count
+                self.expected_daily[(dt.date(), user.pk)] = comment_count
+            dt += timedelta(days=1)
 
     def test_count_lifetime(self):
         CountObjectsByDateTracker(
@@ -94,7 +112,13 @@ class SubjectTrackersTestCase(TestCase):
             metrics=[self.comment_count],
             period=Period.LIFETIME)
         for stat in stats:
-            pass
+            self.assertEqual(
+                self.expected_lifetime[
+                    (stat.date, stat.subject.pk)],
+                stat.value)
+        self.assertEqual(
+            stats.count(),
+            len(self.users) * 7)
 
     def test_count_daily(self):
         CountObjectsByDateTracker(
@@ -107,4 +131,9 @@ class SubjectTrackersTestCase(TestCase):
             metric=self.comment_count,
             period=Period.DAY)
         for stat in stats:
-            pass
+            self.assertEqual(
+                self.expected_daily[(stat.date, stat.subject.pk)],
+                stat.value)
+        self.assertEqual(
+            stats.count(),
+            len(self.users) * 7)
