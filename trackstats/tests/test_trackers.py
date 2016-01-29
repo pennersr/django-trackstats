@@ -2,19 +2,19 @@ import random
 from datetime import date, timedelta, datetime, time
 
 from django.test import TestCase
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from trackstats.models import Domain, Metric, Statistic, Period
 from trackstats.trackers import CountObjectsByDateTracker
 
-User = get_user_model()
+from trackstats.tests.models import Comment
 
 
 class TrackersTestCase(TestCase):
 
     def setUp(self):
+        self.User = get_user_model()
         self.users_domain = Domain.objects.register(ref='users')
         self.user_count = Metric.objects.register(
             domain=self.users_domain,
@@ -34,7 +34,7 @@ class TrackersTestCase(TestCase):
                 'day': signups_on_day
             }
             for i in range(signups_on_day):
-                User.objects.create(
+                self.User.objects.create(
                     username='user{}_{}'.format(dt, i),
                     date_joined=date_joined)
             dt += timedelta(days=1)
@@ -43,7 +43,7 @@ class TrackersTestCase(TestCase):
         CountObjectsByDateTracker(
             period=Period.LIFETIME,
             metric=self.user_count,
-            date_field='date_joined').track(User.objects.all())
+            date_field='date_joined').track(self.User.objects.all())
         stats = Statistic.objects.narrow(
             metrics=[self.user_count],
             period=Period.LIFETIME)
@@ -59,7 +59,7 @@ class TrackersTestCase(TestCase):
         CountObjectsByDateTracker(
             period=Period.DAY,
             metric=self.user_count,
-            date_field='date_joined').track(User.objects.all())
+            date_field='date_joined').track(self.User.objects.all())
         stats = Statistic.objects.narrow(
             metrics=[self.user_count],
             period=Period.DAY)
@@ -70,3 +70,41 @@ class TrackersTestCase(TestCase):
         self.assertEqual(
             stats.count(),
             len(self.expected_signups))
+
+
+class SubjectTrackersTestCase(TestCase):
+
+    def setUp(self):
+        self.User = get_user_model()
+        domain = Domain.objects.register(ref='comments')
+        self.comment_count = Metric.objects.register(
+            domain=domain,
+            ref='comment_count')
+        user = self.User.objects.create(username='bla')
+        Comment.objects.create(user=user)
+
+    def test_count_lifetime(self):
+        CountObjectsByDateTracker(
+            period=Period.LIFETIME,
+            metric=self.comment_count,
+            subject_model=self.User,
+            subject_field='user',
+            date_field='timestamp').track(Comment.objects.all())
+        stats = Statistic.objects.narrow(
+            metrics=[self.comment_count],
+            period=Period.LIFETIME)
+        for stat in stats:
+            pass
+
+    def test_count_daily(self):
+        CountObjectsByDateTracker(
+            period=Period.DAY,
+            metric=self.comment_count,
+            subject_model=self.User,
+            subject_field='user',
+            date_field='timestamp').track(Comment.objects.all())
+        stats = Statistic.objects.narrow(
+            metric=self.comment_count,
+            period=Period.DAY)
+        for stat in stats:
+            pass

@@ -14,6 +14,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
 
     'trackstats',
+    'trackstats.tests'
 ]
 
 USE_TZ = True

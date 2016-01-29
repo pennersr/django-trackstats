@@ -1,5 +1,6 @@
 from datetime import date, timedelta, datetime
 
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from .models import Period, Statistic
@@ -14,7 +15,6 @@ class ObjectsByDateTracker(object):
     subject = None
     subject_model = None
     subject_field = None
-
 
     def __init__(self, **kwargs):
         for prop, val in kwargs.items():
@@ -84,7 +84,7 @@ class ObjectsByDateTracker(object):
             # TODO: Bulk create
             for val in vals:
                 if self.subject_model:
-                    subject = self.subject_model(pk=val[suject_field])
+                    subject = self.subject_model(pk=val[self.subject_field])
                 else:
                     subject = self.subject
                 Statistic.objects.record(
