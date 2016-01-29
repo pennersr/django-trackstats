@@ -34,5 +34,6 @@ class StatisticAdmin(admin.ModelAdmin):
     date_hierarchy = 'date'
     list_filter = (
         'date',
+        'period',
         'metric__domain',
         'metric')

@@ -95,7 +95,7 @@ Define a few metrics::
         ref='followers_count',
         domain=Domain.objects.TWITTER)
 
-Now, let's store some statistics::
+Now, let's store some one-off statistics::
 
     from trackstats.models import Statistic, Domain, Metric, Period
 
@@ -117,3 +117,12 @@ Now, let's store some statistics::
         metric=Metric.objects.USERS_USER_COUNT,
         value=n,
         Period=Period.DAY)
+
+
+Advanced
+========
+
+The `Statistic` model represents statistics grouped by date, as that
+is the most common use case. If you need to group in a different
+manner, e.g. by country and date, you can use the `AbstractStatistic`
+base class to build just that.

@@ -74,7 +74,7 @@ class Domain(models.Model):
         help_text="Short descriptive name")
 
     def __str__(self):
-        return self.name or self.code
+        return self.name or self.ref
 
     def natural_key(self):
         return [self.ref]
@@ -121,21 +121,22 @@ class Metric(models.Model):
 
 class AbstractStatisticQuerySet(models.QuerySet):
 
-    def narrow(self, subjects=None, metrics=None, period=None):
+    def narrow(self, subject_type=None, subject=None, subjects=None,
+                   metric=None, metrics=None, period=None):
         qs = self
+        assert subject is None or subjects is None
+        if subject is not None:
+            subjects = [subject]
+        assert metric is None or metrics is None
+        if metric is not None:
+            metrics = [metric]
         if metrics is not None:
             qs = qs.filter(metric__in=metrics)
         if period:
             qs = qs.filter(period=period)
-        if isinstance(subjects, models.QuerySet):
-            ct = ContentType.objects.get_for_model(subjects.model)
-            qs = qs.filter(
-                subject_type=ct,
-                subject_id__in=subjects.values_list(
-                    'id', flat=True))
-        elif isinstance(subjects, models.EmptyQuerySet):
-            qs = self.none()
-        elif type(subjects) in (list, tuple, set):
+        if subject_type:
+            qs = qs.filter(subject_type=subject_type)
+        if type(subjects) in (list, tuple, set):
             if not subjects:
                 qs = self.none()
             else:
@@ -144,15 +145,25 @@ class AbstractStatisticQuerySet(models.QuerySet):
                 qs = qs.filter(
                     subject_type=ct,
                     subject_id__in=[s.pk for s in subjects])
+        elif isinstance(subjects, models.QuerySet):
+            ct = ContentType.objects.get_for_model(subjects.model)
+            qs = qs.filter(
+                subject_type=ct,
+                subject_id__in=subjects.values_list(
+                    'id', flat=True))
         elif subjects is None:
             pass
+        elif isinstance(subjects, models.query.EmptyQuerySet):
+            qs = self.none()
         else:
             raise NotImplementedError
         return qs
 
+    def any_subject(self, metric, subject):
+        return metric.domain if subject is None else subject
+
     def record(self, metric, value, period, subject=None, **kwargs):
-        if subject is None:
-            subject = metric.domain
+        subject = self.any_subject(metric, subject)
         ct = ContentType.objects.get_for_model(subject)
         instance, _ = self.update_or_create(
             subject_id=subject.pk,
@@ -196,6 +207,14 @@ class StatisticQuerySet(AbstractStatisticQuerySet):
         return super(StatisticQuerySet, self).record(
             date=dt,
             **kwargs)
+
+    def most_recent(self, metric, period, subject_type=None, subject=None):
+        subject = self.any_subject(metric, subject)
+        return self.narrow(
+            metrics=[metric],
+            period=period,
+            subject_type=subject_type,
+            subject=subject).order_by('-date').first()
 
 
 class Statistic(AbstractStatistic):
