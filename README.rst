@@ -118,6 +118,32 @@ Now, let's store some one-off statistics::
         value=n,
         Period=Period.DAY)
 
+Creating code to store statistics yourself can be a tedious job.
+Luckily, a few shortcuts are available to track statistics without
+having to write any code yourself.
+
+Consider you want to keep track of the number of comments created on a
+daily basis::
+
+    from trackstats.trackers import CountObjectsByDateTracker
+
+    CountObjectsByDateTracker(
+        period=Period.DAY,
+        metric=Metric.objects.COMMENT_COUNT,
+        date_field='timestamp').track(Comment.objects.all())
+
+Or, in case you want to track the number of comments, per user, on a daily
+basis::
+
+    CountObjectsByDateTracker(
+        period=Period.DAY,
+        metric=Metric.objects.COMMENT_COUNT,
+        # comment.user points to a User
+        subject_model=User,
+        subject_field='user',
+        # Comment.timestamp is used for grouping
+        date_field='timestamp').track(Comment.objects.all())
+
 
 Advanced
 ========

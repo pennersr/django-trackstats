@@ -8,8 +8,8 @@ from .models import Period, Statistic
 
 class ObjectsByDateTracker(object):
     date_field = 'date'
-    aggr_op = models.Count
-    aggr_field = 'pk'
+    aggr_op = None
+    aggr_field = None
     metric = None
     period = None
     subject = None
@@ -95,7 +95,6 @@ class ObjectsByDateTracker(object):
                     period=self.period)
         else:
             raise NotImplementedError
-
 
 
 class CountObjectsByDateTracker(ObjectsByDateTracker):
