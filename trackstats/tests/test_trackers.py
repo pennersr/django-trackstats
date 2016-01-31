@@ -1,6 +1,6 @@
 import random
 from collections import Counter
-from datetime import date, timedelta, datetime, time
+from datetime import date, timedelta
 
 from django.test import TestCase
 from django.contrib.auth import get_user_model
@@ -12,6 +12,10 @@ from trackstats.trackers import CountObjectsByDateTracker
 from trackstats.tests.models import Comment
 
 
+def to_date(dt):
+    return timezone.make_naive(dt).date()
+
+
 class TrackersTestCase(TestCase):
 
     def setUp(self):
@@ -21,23 +25,21 @@ class TrackersTestCase(TestCase):
             domain=self.users_domain,
             ref='user_count')
         self.expected_signups = {}
-        dt = date.today() - timedelta(days=7)
+        dt = timezone.now() - timedelta(days=7)
+        # TODO: Add timezone testing
+        # dt.replace(hour=2)
         signups_lifetime = 0
-        while dt != date.today():
+        while to_date(dt) != date.today():
             signups_on_day = random.randint(1, 5)
             signups_lifetime += signups_on_day
-            date_joined = timezone.make_aware(
-                datetime.combine(
-                    dt,
-                    time()))
-            self.expected_signups[dt] = {
+            self.expected_signups[to_date(dt)] = {
                 'lifetime': signups_lifetime,
                 'day': signups_on_day
             }
             for i in range(signups_on_day):
                 self.User.objects.create(
-                    username='user{}_{}'.format(dt, i),
-                    date_joined=date_joined)
+                    username='user{}_{}'.format(to_date(dt), i),
+                    date_joined=dt)
             dt += timedelta(days=1)
         self.expected_signups[date.today()] = self.expected_signups[
             date.today() - timedelta(days=1)]
@@ -90,7 +92,7 @@ class SubjectTrackersTestCase(TestCase):
         dt = timezone.now() - timedelta(days=7)
         self.expected_daily = {}
         self.expected_lifetime = Counter()
-        while dt.date() <= date.today():
+        while to_date(dt) <= date.today():
             for user in users:
                 comment_count = random.randint(1, 5)
                 for i in range(comment_count):
@@ -98,10 +100,10 @@ class SubjectTrackersTestCase(TestCase):
                         timestamp=dt,
                         user=user)
                 self.expected_lifetime[
-                    (dt.date(), user.pk)] = self.expected_lifetime[(
-                        dt.date() - timedelta(days=1),
+                    (to_date(dt), user.pk)] = self.expected_lifetime[(
+                        to_date(dt) - timedelta(days=1),
                         user.pk)] + comment_count
-                self.expected_daily[(dt.date(), user.pk)] = comment_count
+                self.expected_daily[(to_date(dt), user.pk)] = comment_count
             dt += timedelta(days=1)
 
     def test_count_lifetime(self):
@@ -121,7 +123,7 @@ class SubjectTrackersTestCase(TestCase):
                 stat.value)
         self.assertEqual(
             stats.count(),
-            len(self.users) * (7 + 1))
+            len(self.expected_lifetime))
 
     def test_count_daily(self):
         CountObjectsByDateTracker(
@@ -139,4 +141,4 @@ class SubjectTrackersTestCase(TestCase):
                 stat.value)
         self.assertEqual(
             stats.count(),
-            len(self.users) * (7 + 1))
+            len(self.expected_daily))

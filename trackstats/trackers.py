@@ -1,7 +1,10 @@
 from datetime import date, timedelta, datetime
 
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 from django.db import models
+from django.db import connections
+from django.utils import timezone
 
 from .models import Period, Statistic
 
@@ -46,7 +49,7 @@ class ObjectsByDateTracker(object):
                 return
             start_date = getattr(first_instance, self.date_field)
         if start_date and isinstance(start_date, datetime):
-            start_date = start_date.date()
+            start_date = timezone.make_naive(start_date).date()
         return start_date
 
     def track(self, qs):
@@ -60,9 +63,7 @@ class ObjectsByDateTracker(object):
             upto_date = start_date
             while upto_date <= to_date:
                 filter_kwargs = {
-                    self.date_field + '__year__lte': upto_date.year,
-                    self.date_field + '__month__lte': upto_date.month,
-                    self.date_field + '__day__lte': upto_date.day
+                    self.date_field + '__date__lte': upto_date
                 }
                 if self.subject_model:
                     vals = qs.filter(**filter_kwargs).values(
@@ -90,8 +91,18 @@ class ObjectsByDateTracker(object):
             values_fields = ['ts_date']
             if self.subject_model:
                 values_fields.append(self.subject_field)
-            vals = qs.extra({"ts_date": "DATE({})".format(
-                self.date_field)}).values(
+
+            connection = connections[qs.db]
+            tzname = (
+                timezone.get_current_timezone_name()
+                if settings.USE_TZ else None)
+            date_sql, tz_params = connection.ops.datetime_cast_date_sql(
+                self.date_field,
+                tzname)
+
+            vals = qs.extra(
+                select={"ts_date": date_sql},
+                select_params=tz_params).values(
                 *values_fields).order_by().annotate(ts_n=self.aggr_op)
             # TODO: Bulk create
             for val in vals:
