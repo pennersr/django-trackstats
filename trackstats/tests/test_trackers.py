@@ -39,6 +39,8 @@ class TrackersTestCase(TestCase):
                     username='user{}_{}'.format(dt, i),
                     date_joined=date_joined)
             dt += timedelta(days=1)
+        self.expected_signups[date.today()] = self.expected_signups[
+            date.today() - timedelta(days=1)]
 
     def test_count_lifetime(self):
         CountObjectsByDateTracker(
@@ -70,7 +72,8 @@ class TrackersTestCase(TestCase):
                 self.expected_signups[stat.date]['day'])
         self.assertEqual(
             stats.count(),
-            len(self.expected_signups))
+            # Today is not in there due to group by.
+            len(self.expected_signups) - 1)
 
 
 class SubjectTrackersTestCase(TestCase):
@@ -87,7 +90,7 @@ class SubjectTrackersTestCase(TestCase):
         dt = timezone.now() - timedelta(days=7)
         self.expected_daily = {}
         self.expected_lifetime = Counter()
-        while dt.date() != date.today():
+        while dt.date() <= date.today():
             for user in users:
                 comment_count = random.randint(1, 5)
                 for i in range(comment_count):
@@ -118,7 +121,7 @@ class SubjectTrackersTestCase(TestCase):
                 stat.value)
         self.assertEqual(
             stats.count(),
-            len(self.users) * 7)
+            len(self.users) * (7 + 1))
 
     def test_count_daily(self):
         CountObjectsByDateTracker(
@@ -136,4 +139,4 @@ class SubjectTrackersTestCase(TestCase):
                 stat.value)
         self.assertEqual(
             stats.count(),
-            len(self.users) * 7)
+            len(self.users) * (7 + 1))

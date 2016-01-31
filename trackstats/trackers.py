@@ -58,7 +58,7 @@ class ObjectsByDateTracker(object):
             # Intentionally recompute last stat, as we may have computed
             # that the last time when the day was not over yet.
             upto_date = start_date
-            while upto_date != to_date:
+            while upto_date <= to_date:
                 filter_kwargs = {
                     self.date_field + '__year__lte': upto_date.year,
                     self.date_field + '__month__lte': upto_date.month,
