@@ -24,6 +24,8 @@ class MetricAdmin(admin.ModelAdmin):
 
 @admin.register(Statistic)
 class StatisticAdmin(admin.ModelAdmin):
+    ordering = (
+        '-date',)
     list_display = (
         'date',
         'metric',
