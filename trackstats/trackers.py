@@ -9,7 +9,6 @@ from .models import Period, Statistic
 class ObjectsByDateTracker(object):
     date_field = 'date'
     aggr_op = None
-    aggr_field = None
     metric = None
     period = None
     subject = None
@@ -67,8 +66,7 @@ class ObjectsByDateTracker(object):
                 }
                 if self.subject_model:
                     vals = qs.filter(**filter_kwargs).values(
-                        self.subject_field).annotate(ts_n=self.aggr_op(
-                            self.aggr_field))
+                        self.subject_field).annotate(ts_n=self.aggr_op)
                     for val in vals:
                         subject = self.subject_model(
                             pk=val[self.subject_field])
@@ -94,8 +92,7 @@ class ObjectsByDateTracker(object):
                 values_fields.append(self.subject_field)
             vals = qs.extra({"ts_date": "DATE({})".format(
                 self.date_field)}).values(
-                *values_fields).order_by().annotate(ts_n=self.aggr_op(
-                    self.aggr_field))
+                *values_fields).order_by().annotate(ts_n=self.aggr_op)
             # TODO: Bulk create
             for val in vals:
                 if self.subject_model:
@@ -113,5 +110,4 @@ class ObjectsByDateTracker(object):
 
 
 class CountObjectsByDateTracker(ObjectsByDateTracker):
-    aggr_op = models.Count
-    aggr_field = 'pk'
+    aggr_op = models.Count('pk', distinct=True)
