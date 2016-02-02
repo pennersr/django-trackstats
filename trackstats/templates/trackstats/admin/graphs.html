@@ -3,8 +3,8 @@
 {% load i18n static %}
 
 {% block extrahead %}
-<link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
-<script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi?autoload={'modules':[{'name':'visualization','version':'1.1','packages':['corechart', 'timeline']}]}"></script>
+
 <script src="{% static 'trackstats/js/graphs.js' %}"></script>
 <link rel="stylesheet"  href="{% static 'trackstats/css/admin.css' %}">
 {% endblock %}
@@ -38,9 +38,30 @@
 
 {% if form.is_valid %}
 <script>
- var graphData = {{ graph_data|safe }};
+  var graphData = [
+    {% for stat in statistics %}
+    [{{ stat.js_date }}, {{ stat.value }}],
+    {% endfor %}
+  ];
+
+  var graphOptions = {
+    title: '{{ form.cleaned_data.metric.name }}',
+    width: "100%",
+    height: 500,
+    hAxis: {
+      format: 'yyyy-M-d',
+      gridlines: {count: 15}
+    },
+    vAxis: {
+      gridlines: {color: 'none'},
+      minValue: 0
+    }
+  };
+
 </script>
-<div style="height: 100%" class="trackstats-graph"></div>
+
+<div id="trackstats-graph"></div>
+
 {% endif %}
 
 {% endblock %}

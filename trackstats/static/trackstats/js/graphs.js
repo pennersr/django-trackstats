@@ -1,13 +1,17 @@
 (function () {
 
     function init() {
-        var elt = document.querySelector('div.trackstats-graph');
-        if (elt) {
-            new Chartist.Line('div.trackstats-graph',
-                              graphData,
-                              {fullWidth: true,
-                               height: '500px'
-                              });
+        google.load('visualization', '1', {packages: ['corechart']});
+        google.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            var data = new google.visualization.DataTable();
+            data.addColumn('date', 'Date');
+            data.addColumn('number', 'Value');
+
+            data.addRows(graphData);
+            var chart = new google.visualization.LineChart(document.getElementById('trackstats-graph'));
+            chart.draw(data, graphOptions);
         }
     }
 

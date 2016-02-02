@@ -56,24 +56,21 @@ class StatisticAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
     def graphs(self, request):
-        data = {}
         context = dict(
             self.admin_site.each_context(request))
         if 'to_date' in request.GET:
             form = GraphForm(request.GET)
             if form.is_valid():
-                stats = form.get_statistics()
-                data = {
-                    'labels': [
-                        s.date.isoformat()
-                        for s in stats
-                    ],
-                    'series': [[
-                        s.value
-                        for s in stats
-                    ]]
-                }
-                context['graph_data'] = json.dumps(data)
+                stats = []
+                for stat in form.get_statistics():
+                    stats.append(
+                        dict(
+                            js_date='new Date({}, {}, {})'.format(
+                                stat.date.year,
+                                stat.date.month-1,
+                                stat.date.day),
+                            value=stat.value))
+                context['statistics'] = stats
         else:
             stat = Statistic.objects.last()
             initial = {}
