@@ -1,0 +1,6 @@
+
+form.trackstats-graph {
+    display: flex;
+    flex-direction: row;
+    align-items: top;
+}

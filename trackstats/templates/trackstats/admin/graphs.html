@@ -1,0 +1,46 @@
+{% extends "admin/base_site.html" %}
+
+{% load i18n static %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+<script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
+<script src="{% static 'trackstats/js/graphs.js' %}"></script>
+<link rel="stylesheet"  href="{% static 'trackstats/css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<form class="trackstats-graph" action="{% url 'admin:trackstats_graphs' %}" method="get" >
+  <div>
+    {{ form.metric }}
+    {{ form.metric.errors }}
+  </div>
+  <div>
+    {{ form.from_date }}
+    {{ form.from_date.errors }}
+  </div>
+  <div>
+    {{ form.to_date }}
+    {{ form.to_date.errors }}
+  </div>
+  <div>
+    {{ form.subject_type }}
+    {{ form.subject_type.errors }}
+  </div>
+  <div>
+    {{ form.subject_id }}
+    {{ form.subject_id.errors }}
+  </div>
+  <button type="submit">{% trans 'Go' %}</button>
+</form>
+
+
+{% if form.is_valid %}
+<script>
+ var graphData = {{ graph_data|safe }};
+</script>
+<div style="height: 100%" class="trackstats-graph"></div>
+{% endif %}
+
+{% endblock %}
