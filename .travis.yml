@@ -3,7 +3,9 @@ python: 2.7
 env:
     - TOX_ENV=py27
     - TOX_ENV=py34
-install: pip install tox
+install:
+  - pip install tox
+  - pip install "coverage>=3.7.1" coveralls
 script: tox -e $TOX_ENV
 after_success:
   - coverage report
