@@ -6,7 +6,7 @@ from django.db import models
 from django.db import connections
 from django.utils import timezone
 
-from .models import Period, Statistic
+from .models import Period, StatisticByDate, StatisticByDateAndObject
 
 
 class ObjectsByDateTracker(object):
@@ -14,32 +14,22 @@ class ObjectsByDateTracker(object):
     aggr_op = None
     metric = None
     period = None
-    subject = None
-    subject_model = None
-    subject_field = None
+    statistic_model = StatisticByDate
 
     def __init__(self, **kwargs):
         for prop, val in kwargs.items():
             setattr(self, prop, val)
-        assert self.subject is None or self.subject_field is None
-        if self.subject_field is None:
-            self.subject = Statistic.objects.any_subject(
-                self.metric,
-                self.subject)
-        else:
-            assert self.subject_model
 
-    def get_start_date(self, qs):
+    def get_most_recent_kwargs(self):
         most_recent_kwargs = {
             'metric': self.metric,
             'period': self.period}
-        if self.subject_model:
-            most_recent_kwargs[
-                'subject_type'] = ContentType.objects.get_for_model(
-                    self.subject_model)
-        else:
-            most_recent_kwargs['subject'] = self.subject
-        last_stat = Statistic.objects.most_recent(**most_recent_kwargs)
+        return most_recent_kwargs
+
+    def get_start_date(self, qs):
+        most_recent_kwargs = self.get_most_recent_kwargs()
+        last_stat = self.statistic_model.objects.most_recent(
+            **most_recent_kwargs)
         if last_stat:
             start_date = last_stat.date
         else:
@@ -52,6 +42,23 @@ class ObjectsByDateTracker(object):
             start_date = timezone.make_naive(start_date).date()
         return start_date
 
+    def track_lifetime_upto(self, qs, upto_date):
+        filter_kwargs = {
+            self.date_field + '__date__lte': upto_date
+        }
+        n = qs.filter(**filter_kwargs).count()
+        self.statistic_model.objects.record(
+            metric=self.metric,
+            value=n,
+            period=self.period,
+            date=upto_date)
+
+    def get_track_values(self):
+        return []
+
+    def get_record_kwargs(self, val):
+        return {}
+
     def track(self, qs):
         to_date = date.today()
         start_date = self.get_start_date(qs)
@@ -62,36 +69,10 @@ class ObjectsByDateTracker(object):
             # that the last time when the day was not over yet.
             upto_date = start_date
             while upto_date <= to_date:
-                filter_kwargs = {
-                    self.date_field + '__date__lte': upto_date
-                }
-                if self.subject_model:
-                    vals = qs.filter(**filter_kwargs).values(
-                        self.subject_field).annotate(ts_n=self.aggr_op)
-                    for val in vals:
-                        subject = self.subject_model(
-                            pk=val[self.subject_field])
-                        # TODO: Bulk create
-                        Statistic.objects.record(
-                            metric=self.metric,
-                            value=val['ts_n'],
-                            date=upto_date,
-                            subject=subject,
-                            period=self.period)
-                else:
-                    n = qs.filter(**filter_kwargs).count()
-                    Statistic.objects.record(
-                        metric=self.metric,
-                        value=n,
-                        subject=self.subject,
-                        period=self.period,
-                        date=upto_date)
+                self.track_lifetime_upto(qs, upto_date)
                 upto_date += timedelta(days=1)
         elif self.period == Period.DAY:
-            values_fields = ['ts_date']
-            if self.subject_model:
-                values_fields.append(self.subject_field)
-
+            values_fields = ['ts_date'] + self.get_track_values()
             connection = connections[qs.db]
             tzname = (
                 timezone.get_current_timezone_name()
@@ -99,26 +80,86 @@ class ObjectsByDateTracker(object):
             date_sql, tz_params = connection.ops.datetime_cast_date_sql(
                 self.date_field,
                 tzname)
-
             vals = qs.extra(
                 select={"ts_date": date_sql},
                 select_params=tz_params).values(
                 *values_fields).order_by().annotate(ts_n=self.aggr_op)
             # TODO: Bulk create
             for val in vals:
-                if self.subject_model:
-                    subject = self.subject_model(pk=val[self.subject_field])
-                else:
-                    subject = self.subject
-                Statistic.objects.record(
+                self.statistic_model.objects.record(
                     metric=self.metric,
                     value=val['ts_n'],
                     date=val['ts_date'],
-                    subject=subject,
-                    period=self.period)
+                    period=self.period,
+                    **self.get_record_kwargs(val))
         else:
             raise NotImplementedError
 
 
+class ObjectsByDateAndObjectTracker(ObjectsByDateTracker):
+    object = None
+    object_model = None
+    object_field = None
+    statistic_model = StatisticByDateAndObject
+
+    def __init__(self, **kwargs):
+        super(ObjectsByDateAndObjectTracker, self).__init__(**kwargs)
+        assert self.object is None or self.object_field is None
+        assert self.object or self.object_field
+
+    def get_most_recent_kwargs(self):
+        kwargs = super(
+            ObjectsByDateAndObjectTracker, self).get_most_recent_kwargs()
+        if self.object_model:
+            kwargs['object_type'] = ContentType.objects.get_for_model(
+                self.object_model)
+        else:
+            kwargs['object'] = self.object
+        return kwargs
+
+    def track_lifetime_upto(self, qs, upto_date):
+        filter_kwargs = {
+            self.date_field + '__date__lte': upto_date
+        }
+        if self.object_model:
+            vals = qs.filter(**filter_kwargs).values(
+                self.object_field).annotate(ts_n=self.aggr_op)
+            for val in vals:
+                object = self.object_model(
+                    pk=val[self.object_field])
+                # TODO: Bulk create
+                StatisticByDateAndObject.objects.record(
+                    metric=self.metric,
+                    value=val['ts_n'],
+                    date=upto_date,
+                    object=object,
+                    period=self.period)
+        else:
+            n = qs.filter(**filter_kwargs).count()
+            StatisticByDateAndObject.objects.record(
+                metric=self.metric,
+                value=n,
+                object=self.object,
+                period=self.period,
+                date=upto_date)
+
+    def get_track_values(self):
+        ret = super(ObjectsByDateAndObjectTracker, self).get_track_values()
+        if self.object_model:
+            ret.append(self.object_field)
+        return ret
+
+    def get_record_kwargs(self, val):
+        if self.object_model:
+            object = self.object_model(pk=val[self.object_field])
+        else:
+            object = self.object
+        return {'object': object}
+
+
 class CountObjectsByDateTracker(ObjectsByDateTracker):
+    aggr_op = models.Count('pk', distinct=True)
+
+
+class CountObjectsByDateAndObjectTracker(ObjectsByDateAndObjectTracker):
     aggr_op = models.Count('pk', distinct=True)

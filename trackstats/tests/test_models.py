@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import get_user_model
 
-from trackstats.models import Domain, Metric, Statistic, Period
+from trackstats.models import Domain, Metric, StatisticByDate, Period
 
 User = get_user_model()
 
@@ -74,8 +74,7 @@ class StatisticsTestCase(TestCase):
             ref='user_count')
 
     def test_record_today(self):
-        record = Statistic.objects.record(
-            subject=ContentType.objects.get_for_model(User),
+        record = StatisticByDate.objects.record(
             period=Period.DAY,
             metric=self.user_count,
             value=10)
@@ -83,8 +82,7 @@ class StatisticsTestCase(TestCase):
 
     def test_record_at_date(self):
         dt = date(2016, 1, 1)
-        record = Statistic.objects.record(
-            subject=ContentType.objects.get_for_model(User),
+        record = StatisticByDate.objects.record(
             period=Period.DAY,
             metric=self.user_count,
             value=10,

@@ -121,12 +121,10 @@ class Metric(models.Model):
 
 class AbstractStatisticQuerySet(models.QuerySet):
 
-    def narrow(self, subject_type=None, subject=None, subjects=None,
-                   metric=None, metrics=None, period=None):
+    order_field = None
+
+    def narrow(self, metric=None, metrics=None, period=None):
         qs = self
-        assert subject is None or subjects is None
-        if subject is not None:
-            subjects = [subject]
         assert metric is None or metrics is None
         if metric is not None:
             metrics = [metric]
@@ -134,54 +132,22 @@ class AbstractStatisticQuerySet(models.QuerySet):
             qs = qs.filter(metric__in=metrics)
         if period:
             qs = qs.filter(period=period)
-        if subject_type:
-            qs = qs.filter(subject_type=subject_type)
-        if type(subjects) in (list, tuple, set):
-            if not subjects:
-                qs = self.none()
-            else:
-                # Assumption: all subjects are of same type
-                ct = ContentType.objects.get_for_model(subjects[0])
-                qs = qs.filter(
-                    subject_type=ct,
-                    subject_id__in=[s.pk for s in subjects])
-        elif isinstance(subjects, models.QuerySet):
-            ct = ContentType.objects.get_for_model(subjects.model)
-            qs = qs.filter(
-                subject_type=ct,
-                subject_id__in=subjects.values_list(
-                    'id', flat=True))
-        elif subjects is None:
-            pass
-        elif isinstance(subjects, models.query.EmptyQuerySet):
-            qs = self.none()
-        else:
-            raise NotImplementedError
         return qs
 
-    def any_subject(self, metric, subject):
-        return metric.domain if subject is None else subject
-
-    def record(self, metric, value, period, subject=None, **kwargs):
-        subject = self.any_subject(metric, subject)
-        ct = ContentType.objects.get_for_model(subject)
+    def record(self, metric, value, period, **kwargs):
         instance, _ = self.update_or_create(
-            subject_id=subject.pk,
-            subject_type=ct,
             period=period,
             metric=metric,
             defaults={'value': value},
             **kwargs)
         return instance
 
+    def most_recent(self, **kwargs):
+        self.narrow(**kwargs).order_by('-' + self.order_field).first()
+
 
 class AbstractStatistic(models.Model):
     metric = models.ForeignKey(Metric, on_delete=models.PROTECT)
-    subject_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
-    subject_id = models.PositiveIntegerField()
-    subject = GenericForeignKey(
-        'subject_type',
-        'subject_id')
     value = models.BigIntegerField(
         # To support storing that no data is available, use: NULL
         null=True)
@@ -191,43 +157,128 @@ class AbstractStatistic(models.Model):
         abstract = True
 
 
-class StatisticQuerySet(AbstractStatisticQuerySet):
+class ByObjectMixin(models.Model):
+    object_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
+    object_id = models.PositiveIntegerField()
+    object = GenericForeignKey(
+        'object_type',
+        'object_id')
 
-    def narrow(self, from_date=None, to_date=None, **kwargs):
+    class Meta:
+        abstract = True
+
+
+class ByObjectQuerySetMixin(object):
+
+    def record(self, **kwargs):
+        object = kwargs.pop('object')
+        ct = ContentType.objects.get_for_model(object)
+        return super(ByObjectQuerySetMixin, self).record(
+            object_id=object.pk,
+            object_type=ct,
+            **kwargs)
+
+    def narrow(self, **kwargs):
+        qs = self
+        object = kwargs.pop('object', None)
+        objects = kwargs.pop('objects', None)
+        object_type = kwargs.pop('object_type', None)
+        assert object is None or objects is None
+        if object is not None:
+            objects = [object]
+        if object_type:
+            qs = qs.filter(object_type=object_type)
+        if type(objects) in (list, tuple, set):
+            if not objects:
+                qs = self.none()
+            else:
+                # Assumption: all objects are of same type
+                ct = ContentType.objects.get_for_model(objects[0])
+                qs = qs.filter(
+                    object_type=ct,
+                    object_id__in=[s.pk for s in objects])
+        elif isinstance(objects, models.QuerySet):
+            ct = ContentType.objects.get_for_model(objects.model)
+            qs = qs.filter(
+                object_type=ct,
+                object_id__in=objects.values_list(
+                    'id', flat=True))
+        elif objects is None:
+            pass
+        elif isinstance(objects, models.query.EmptyQuerySet):
+            qs = self.none()
+        else:
+            raise NotImplementedError
+        return super(ByObjectQuerySetMixin, qs).narrow(**kwargs)
+
+
+class ByDateMixin(models.Model):
+    date = models.DateField(db_index=True)
+
+    class Meta:
+        abstract = True
+
+
+class ByDateQuerySetMixin(object):
+
+    order_field = 'date'
+
+    def record(self, **kwargs):
+        dt = kwargs.pop('date', date.today())
+        return super(ByDateQuerySetMixin, self).record(date=dt, **kwargs)
+
+    def narrow(self, **kwargs):
         """Up-to including"""
+        from_date = kwargs.pop('from_date', None)
+        to_date = kwargs.pop('to_date', None)
         qs = self
         if from_date:
             qs = qs.filter(date__gte=from_date)
         if to_date:
             qs = qs.filter(date__lte=to_date)
-        return super(StatisticQuerySet, qs).narrow(**kwargs)
-
-    def record(self, **kwargs):
-        dt = kwargs.pop('date', date.today())
-        return super(StatisticQuerySet, self).record(
-            date=dt,
-            **kwargs)
-
-    def most_recent(self, metric, period, subject_type=None, subject=None):
-        subject = self.any_subject(metric, subject)
-        return self.narrow(
-            metrics=[metric],
-            period=period,
-            subject_type=subject_type,
-            subject=subject).order_by('-date').first()
+        return super(ByDateQuerySetMixin, qs).narrow(**kwargs)
 
 
-class Statistic(AbstractStatistic):
-    objects = StatisticQuerySet.as_manager()
+class StatisticByDateQuerySet(
+        ByDateQuerySetMixin,
+        AbstractStatisticQuerySet):
+    pass
 
-    date = models.DateField(db_index=True)
+
+class StatisticByDateAndObjectQuerySet(
+        ByDateQuerySetMixin,
+        ByObjectQuerySetMixin,
+        AbstractStatisticQuerySet):
+    pass
+
+
+class StatisticByDate(ByDateMixin, AbstractStatistic):
+    objects = StatisticByDateQuerySet.as_manager()
 
     class Meta:
         unique_together = [
             'date',
             'metric',
-            'subject_type',
-            'subject_id',
+            'period']
+
+    def __str__(self):
+        return '{date}: {value}'.format(
+            date=self.date,
+            value=self.value)
+
+
+class StatisticByDateAndObject(
+        ByDateMixin,
+        ByObjectMixin,
+        AbstractStatistic):
+    objects = StatisticByDateAndObjectQuerySet.as_manager()
+
+    class Meta:
+        unique_together = [
+            'date',
+            'metric',
+            'object_type',
+            'object_id',
             'period']
 
     def __str__(self):

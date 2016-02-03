@@ -41,18 +41,8 @@ Domain
   statistics from social networks, you may introduce a "Twitter"
   domain, and metrics "Followers count".
 
-Subject
-  When storing statistics we are storing values relating to a specific
-  subject.  For example, when keeping track of the "comment count" per
-  user, the subject is clearly the user. Yet, if you are keeping track
-  of the "Order count" globally for the whole webshop, the subject is
-  less clear. You could decide to choose to use the `Site` instance
-  where your webshop is running at. If not specified, the domain of the
-  metric is used as the subject.
-
 Statistic
-  Used to store the actual values by date, for a specific metric, relating to
-  a specific subject.
+  Used to store the actual values by date, for a specific metric.
 
 Period
   The time period for which the stored value holds. For example, you
@@ -64,6 +54,7 @@ Reference IDs
   Domains and metrics must be assigned unique reference IDs (of type
   string). Rationale: Having a human readable, non PK based, reference
   is esential as soon as you are going to export statistics.
+
 
 Usage
 =====
@@ -101,13 +92,12 @@ Define a few metrics::
 
 Now, let's store some one-off statistics::
 
-    from trackstats.models import Statistic, Domain, Metric, Period
+    from trackstats.models import StatisticByDate, Domain, Metric, Period
 
     # All-time, cumulative, statistic
     n = Order.objects.all().count()
-    Statistic.objects.record(
+    StatisticByDate.objects.record(
         metric=Metric.objects.SHOPPING_ORDER_COUNT,
-        subject=Site.objects.get_current(),
         value=n,
         Period=Period.LIFETIME)
 
@@ -117,7 +107,7 @@ Now, let's store some one-off statistics::
         date_joined__day=dt.day,
         date_joined__month=dt.month,
         date_joined__year=dt.year).count()
-    Statistic.objects.record(
+    StatisticByDate.objects.record(
         metric=Metric.objects.USERS_USER_COUNT,
         value=n,
         Period=Period.DAY)
@@ -139,23 +129,29 @@ daily basis::
 Or, in case you want to track the number of comments, per user, on a daily
 basis::
 
-    CountObjectsByDateTracker(
+    CountObjectsByDateAndObjectTracker(
         period=Period.DAY,
         metric=Metric.objects.COMMENT_COUNT,
         # comment.user points to a User
-        subject_model=User,
-        subject_field='user',
+        object_model=User,
+        object_field='user',
         # Comment.timestamp is used for grouping
         date_field='timestamp').track(Comment.objects.all())
 
 
-Advanced
-========
+Models
+======
 
-The `Statistic` model represents statistics grouped by date, as that
-is the most common use case. If you need to group in a different
-manner, e.g. by country and date, you can use the `AbstractStatistic`
-base class to build just that.
+The `StatisticByDate` model represents statistics grouped by date --
+the most common use case.
+
+Another common use case is to group by both date and some other object
+(e.g. a user, category, site).  For this, use
+`StatisticByDateAndObject`. It uses a generic foreign key.
+
+If you need to group in a different manner, e.g. by country, province
+and date, you can use the `AbstractStatistic` base class to build just
+that.
 
 
 Cross-Selling

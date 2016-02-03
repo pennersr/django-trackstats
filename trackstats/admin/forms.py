@@ -3,7 +3,7 @@ from datetime import timedelta, date
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 
-from trackstats.models import Metric, Statistic
+from trackstats.models import Metric, StatisticByDate
 
 
 class GraphForm(forms.Form):
@@ -21,7 +21,7 @@ class GraphForm(forms.Form):
 
     def get_statistics(self):
         assert self.is_valid()
-        stats = Statistic.objects.narrow(
+        stats = StatisticByDate.objects.narrow(
             from_date=self.cleaned_data['from_date'],
             to_date=self.cleaned_data['to_date'],
             metric=self.cleaned_data['metric'],

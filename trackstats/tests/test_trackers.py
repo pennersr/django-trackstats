@@ -6,8 +6,15 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from trackstats.models import Domain, Metric, Statistic, Period
-from trackstats.trackers import CountObjectsByDateTracker
+from trackstats.models import (
+    Domain,
+    Metric,
+    StatisticByDate,
+    StatisticByDateAndObject,
+    Period)
+from trackstats.trackers import (
+    CountObjectsByDateTracker,
+    CountObjectsByDateAndObjectTracker)
 
 from trackstats.tests.models import Comment
 
@@ -49,7 +56,7 @@ class TrackersTestCase(TestCase):
             period=Period.LIFETIME,
             metric=self.user_count,
             date_field='date_joined').track(self.User.objects.all())
-        stats = Statistic.objects.narrow(
+        stats = StatisticByDate.objects.narrow(
             metrics=[self.user_count],
             period=Period.LIFETIME)
         for stat in stats:
@@ -65,7 +72,7 @@ class TrackersTestCase(TestCase):
             period=Period.DAY,
             metric=self.user_count,
             date_field='date_joined').track(self.User.objects.all())
-        stats = Statistic.objects.narrow(
+        stats = StatisticByDate.objects.narrow(
             metrics=[self.user_count],
             period=Period.DAY)
         for stat in stats:
@@ -78,7 +85,7 @@ class TrackersTestCase(TestCase):
             len(self.expected_signups) - 1)
 
 
-class SubjectTrackersTestCase(TestCase):
+class ObjectTrackersTestCase(TestCase):
 
     def setUp(self):
         self.User = get_user_model()
@@ -107,37 +114,37 @@ class SubjectTrackersTestCase(TestCase):
             dt += timedelta(days=1)
 
     def test_count_lifetime(self):
-        CountObjectsByDateTracker(
+        CountObjectsByDateAndObjectTracker(
             period=Period.LIFETIME,
             metric=self.comment_count,
-            subject_model=self.User,
-            subject_field='user',
+            object_model=self.User,
+            object_field='user',
             date_field='timestamp').track(Comment.objects.all())
-        stats = Statistic.objects.narrow(
+        stats = StatisticByDateAndObject.objects.narrow(
             metrics=[self.comment_count],
             period=Period.LIFETIME)
         for stat in stats:
             self.assertEqual(
                 self.expected_lifetime[
-                    (stat.date, stat.subject.pk)],
+                    (stat.date, stat.object.pk)],
                 stat.value)
         self.assertEqual(
             stats.count(),
             len(self.expected_lifetime))
 
     def test_count_daily(self):
-        CountObjectsByDateTracker(
+        CountObjectsByDateAndObjectTracker(
             period=Period.DAY,
             metric=self.comment_count,
-            subject_model=self.User,
-            subject_field='user',
+            object_model=self.User,
+            object_field='user',
             date_field='timestamp').track(Comment.objects.all())
-        stats = Statistic.objects.narrow(
+        stats = StatisticByDateAndObject.objects.narrow(
             metric=self.comment_count,
             period=Period.DAY)
         for stat in stats:
             self.assertEqual(
-                self.expected_daily[(stat.date, stat.subject.pk)],
+                self.expected_daily[(stat.date, stat.object.pk)],
                 stat.value)
         self.assertEqual(
             stats.count(),
