@@ -1,0 +1,12 @@
+{% extends "trackstats/admin/graph.html" %}
+
+{% block graph_form_fields %}
+<div>
+  {{ form.object_type }}
+  {{ form.object_type.errors }}
+</div>
+<div>
+  {{ form.object_id }}
+  {{ form.object_id.errors }}
+</div>
+{% endblock %}

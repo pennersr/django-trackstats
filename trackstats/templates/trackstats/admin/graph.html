@@ -11,7 +11,7 @@
 
 {% block content %}
 
-<form class="trackstats-graph" action="{% url 'admin:trackstats_graphs' %}" method="get" >
+<form class="trackstats-graph" action="" method="get" >
   <div>
     {{ form.metric }}
     {{ form.metric.errors }}
@@ -24,14 +24,8 @@
     {{ form.to_date }}
     {{ form.to_date.errors }}
   </div>
-  <div>
-    {{ form.subject_type }}
-    {{ form.subject_type.errors }}
-  </div>
-  <div>
-    {{ form.subject_id }}
-    {{ form.subject_id.errors }}
-  </div>
+  {% block graph_form_fields %}
+  {% endblock %}
   <button type="submit">{% trans 'Go' %}</button>
 </form>
 

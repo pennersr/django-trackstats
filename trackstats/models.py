@@ -260,6 +260,8 @@ class StatisticByDate(ByDateMixin, AbstractStatistic):
             'date',
             'metric',
             'period']
+        verbose_name = 'Statistic by date'
+        verbose_name_plural = 'Statistics by date'
 
     def __str__(self):
         return '{date}: {value}'.format(
@@ -280,6 +282,8 @@ class StatisticByDateAndObject(
             'object_type',
             'object_id',
             'period']
+        verbose_name = 'Statistic by date and object'
+        verbose_name_plural = 'Statistics by date and object'
 
     def __str__(self):
         return '{date}: {value}'.format(
