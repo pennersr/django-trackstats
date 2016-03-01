@@ -39,7 +39,10 @@ class ObjectsByDateTracker(object):
                 return
             start_date = getattr(first_instance, self.date_field)
         if start_date and isinstance(start_date, datetime):
-            start_date = timezone.make_naive(start_date).date()
+            if timezone.is_aware(start_date):
+                start_date = timezone.make_naive(start_date).date()
+            else:
+                start_date = start_date.date()
         return start_date
 
     def track_lifetime_upto(self, qs, upto_date):

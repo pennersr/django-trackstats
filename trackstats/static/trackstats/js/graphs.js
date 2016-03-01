@@ -10,7 +10,7 @@
             data.addColumn('number', 'Value');
 
             data.addRows(graphData);
-            var chart = new google.visualization.LineChart(document.getElementById('trackstats-graph'));
+            var chart = new google.visualization.ColumnChart(document.getElementById('trackstats-graph'));
             chart.draw(data, graphOptions);
         }
     }

@@ -231,11 +231,14 @@ class ByDateQuerySetMixin(object):
         """Up-to including"""
         from_date = kwargs.pop('from_date', None)
         to_date = kwargs.pop('to_date', None)
+        date = kwargs.pop('date', None)
         qs = self
         if from_date:
             qs = qs.filter(date__gte=from_date)
         if to_date:
             qs = qs.filter(date__lte=to_date)
+        if date:
+            qs = qs.filter(date=date)
         return super(ByDateQuerySetMixin, qs).narrow(**kwargs)
 
 
