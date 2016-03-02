@@ -66,10 +66,10 @@ First, setup your domains::
     Domain.objects.SHOPPING = Domain.objects.register(
         ref='shopping',
         name='Shopping')
-    Domain.objects.USERS = Domain.object.register(
+    Domain.objects.USERS = Domain.objects.register(
         ref='users',
         name='Users')
-    Domain.objects.TWITTER = Domain.object.register(
+    Domain.objects.TWITTER = Domain.objects.register(
         ref='twitter',
         name='Twitter')
 
