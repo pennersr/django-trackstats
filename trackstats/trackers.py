@@ -1,4 +1,4 @@
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, time
 
 from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
@@ -80,12 +80,27 @@ class ObjectsByDateTracker(object):
             tzname = (
                 timezone.get_current_timezone_name()
                 if settings.USE_TZ else None)
-            date_sql, tz_params = connection.ops.datetime_cast_date_sql(
-                self.date_field,
-                tzname)
-            vals = qs.extra(
-                select={"ts_date": date_sql},
-                select_params=tz_params).values(
+
+            is_datetime = isinstance(qs.model._meta.get_field_by_name(
+                self.date_field)[0], models.DateTimeField)
+            if is_datetime:
+                date_sql, tz_params = connection.ops.datetime_cast_date_sql(
+                    self.date_field,
+                    tzname)
+                vals = qs.extra(
+                    select={"ts_date": date_sql},
+                    select_params=tz_params)
+                start_dt = datetime.combine(
+                    start_date, time()) - timedelta(days=1)
+                if tzname:
+                    start_dt = timezone.make_aware(
+                        start_dt,
+                        timezone.get_current_timezone())
+            else:
+                vals = qs.extra(select={"ts_date": self.date_field})
+                start_dt = start_date
+            vals = vals.filter(
+                **{self.date_field + '__gte': start_dt}).values(
                 *values_fields).order_by().annotate(ts_n=self.aggr_op)
             # TODO: Bulk create
             for val in vals:
