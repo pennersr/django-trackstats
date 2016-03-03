@@ -6,7 +6,7 @@
 /_/ /_/   \__,_/\___/_/|_|/____/\__/\__,_/\__/____/
 
 """
-VERSION = (0, 3, 1, 'final', 0)
+VERSION = (0, 3, 2, 'final', 0)
 
 __title__ = 'django-trackstats'
 __version_info__ = VERSION

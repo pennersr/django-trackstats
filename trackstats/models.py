@@ -143,7 +143,7 @@ class AbstractStatisticQuerySet(models.QuerySet):
         return instance
 
     def most_recent(self, **kwargs):
-        self.narrow(**kwargs).order_by('-' + self.order_field).first()
+        return self.narrow(**kwargs).order_by('-' + self.order_field).first()
 
 
 class AbstractStatistic(models.Model):
