@@ -1,10 +1,14 @@
 from datetime import date
 
 from django.test import TestCase
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import get_user_model
 
-from trackstats.models import Domain, Metric, StatisticByDate, Period
+from trackstats.models import (
+    Domain,
+    Metric,
+    StatisticByDate,
+    Period,
+    StatisticByDateAndObject)
 
 User = get_user_model()
 
@@ -64,6 +68,8 @@ class MetricsTestCase(TestCase):
 class StatisticsTestCase(TestCase):
 
     def setUp(self):
+        self.user = User.objects.create(
+            username='john')
         self.shopping_domain = Domain.objects.register(ref='shopping')
         self.users_domain = Domain.objects.register(ref='users')
         self.order_count = Metric.objects.register(
@@ -86,5 +92,15 @@ class StatisticsTestCase(TestCase):
             period=Period.DAY,
             metric=self.user_count,
             value=10,
+            date=dt)
+        self.assertEqual(record.date, dt)
+
+    def test_record_by_date_and_object(self):
+        dt = date(2016, 1, 1)
+        record = StatisticByDateAndObject.objects.record(
+            period=Period.DAY,
+            metric=self.user_count,
+            value=10,
+            object=self.user,
             date=dt)
         self.assertEqual(record.date, dt)
