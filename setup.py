@@ -51,7 +51,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'django>=1.10',
+        'django>=1.9',
         'pytz'
     ],
     cmdclass={'test': DjangoTests},
