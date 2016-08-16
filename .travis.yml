@@ -1,8 +1,10 @@
 language: python
 python: 2.7
 env:
-    - TOX_ENV=py27
-    - TOX_ENV=py34
+    - TOX_ENV=py27-django19
+    - TOX_ENV=py34-django19
+    - TOX_ENV=py27-django110
+    - TOX_ENV=py34-django110
 install:
   - pip install tox
   - pip install "coverage>=3.7.1" coveralls

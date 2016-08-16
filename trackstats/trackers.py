@@ -81,8 +81,8 @@ class ObjectsByDateTracker(object):
                 timezone.get_current_timezone_name()
                 if settings.USE_TZ else None)
 
-            is_datetime = isinstance(qs.model._meta.get_field_by_name(
-                self.date_field)[0], models.DateTimeField)
+            is_datetime = isinstance(qs.model._meta.get_field(
+                self.date_field), models.DateTimeField)
             if is_datetime:
                 date_sql, tz_params = connection.ops.datetime_cast_date_sql(
                     self.date_field,
