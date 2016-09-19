@@ -24,6 +24,20 @@ Source code
   http://github.com/pennersr/django-trackstats
 
 
+Use Case
+========
+
+- You need an elegant solution for storing statistics in a generic and structural fashion.
+
+- You need to denormalize the results of various aggregated queries.
+
+- You require access to the stored statistics within your application layer.
+
+So, the focus is purely on storing statistics for use within your application later
+on. Other features, such as charting, reports, OLAP, query builders, slicing &
+dicing, integration with ``Datadog`` and the likes are all beyond scope.
+
+
 Concepts
 ========
 
