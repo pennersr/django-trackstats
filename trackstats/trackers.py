@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db import models
 from django.db import connections
 from django.utils import timezone
+from functools import reduce
 
 from .models import Period, StatisticByDate, StatisticByDateAndObject
 
@@ -37,7 +38,8 @@ class ObjectsByDateTracker(object):
             if first_instance is None:
                 # No data
                 return
-            start_date = getattr(first_instance, self.date_field)
+            start_date = reduce(getattr, self.date_field.split('__'),
+                                first_instance)
         if start_date and isinstance(start_date, datetime):
             if timezone.is_aware(start_date):
                 start_date = timezone.make_naive(start_date).date()
