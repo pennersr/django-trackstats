@@ -84,12 +84,16 @@ class ObjectsByDateTracker(object):
             is_datetime = isinstance(qs.model._meta.get_field(
                 self.date_field), models.DateTimeField)
             if is_datetime:
-                date_sql, tz_params = connection.ops.datetime_cast_date_sql(
+                date_sql = connection.ops.datetime_cast_date_sql(
                     self.date_field,
                     tzname)
-                vals = qs.extra(
-                    select={"ts_date": date_sql},
-                    select_params=tz_params)
+                # before django 2.0 it returns a tuple
+                if isinstance(date_sql, tuple):
+                    vals = qs.extra(
+                        select={"ts_date": date_sql[0]},
+                        select_params=date_sql[1])
+                else:
+                    vals = qs.extra(select={"ts_date": date_sql})
                 start_dt = datetime.combine(
                     start_date, time()) - timedelta(days=1)
                 if tzname:
