@@ -1,11 +1,13 @@
+sudo: false
 language: python
-python:
- - "2.7"
- - "3.6"
+python: "3.6"
 env:
+  matrix:
     - TOX_ENV=py27-django111
     - TOX_ENV=py36-django111
     - TOX_ENV=py36-django20
+matrix:
+  fast_finish: true
 install:
   - pip install tox
   - pip install "coverage>=3.7.1" coveralls
