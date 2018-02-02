@@ -2,10 +2,10 @@
 Welcome to django-trackstats!
 =============================
 
-.. image:: https://badge.fury.io/py/django-trackstats.png
+.. image:: https://badge.fury.io/py/django-trackstats.svg
    :target: http://badge.fury.io/py/django-trackstats
 
-.. image:: https://travis-ci.org/pennersr/django-trackstats.png
+.. image:: https://travis-ci.org/pennersr/django-trackstats.svg
    :target: http://travis-ci.org/pennersr/django-trackstats
 
 .. image:: https://img.shields.io/pypi/v/django-trackstats.svg
@@ -73,7 +73,9 @@ Reference IDs
 Usage
 =====
 
-First, setup your domains::
+First, setup your domains:
+
+.. code:: python
 
     from trackstats.models import Domain
 
@@ -87,7 +89,9 @@ First, setup your domains::
         ref='twitter',
         name='Twitter')
 
-Define a few metrics::
+Define a few metrics:
+
+.. code:: python
 
     from trackstats.models import Domain, Metric
 
@@ -104,7 +108,9 @@ Define a few metrics::
         ref='followers_count',
         domain=Domain.objects.TWITTER)
 
-Now, let's store some one-off statistics::
+Now, let's store some one-off statistics:
+
+.. code:: python
 
     from trackstats.models import StatisticByDate, Domain, Metric, Period
 
@@ -131,7 +137,9 @@ Luckily, a few shortcuts are available to track statistics without
 having to write any code yourself.
 
 Consider you want to keep track of the number of comments created on a
-daily basis::
+daily basis:
+
+.. code:: python
 
     from trackstats.trackers import CountObjectsByDateTracker
 
@@ -141,7 +149,9 @@ daily basis::
         date_field='timestamp').track(Comment.objects.all())
 
 Or, in case you want to track the number of comments, per user, on a daily
-basis::
+basis:
+
+.. code:: python
 
     CountObjectsByDateAndObjectTracker(
         period=Period.DAY,
@@ -156,15 +166,15 @@ basis::
 Models
 ======
 
-The `StatisticByDate` model represents statistics grouped by date --
+The ``StatisticByDate`` model represents statistics grouped by date --
 the most common use case.
 
 Another common use case is to group by both date and some other object
 (e.g. a user, category, site).  For this, use
-`StatisticByDateAndObject`. It uses a generic foreign key.
+``StatisticByDateAndObject``. It uses a generic foreign key.
 
 If you need to group in a different manner, e.g. by country, province
-and date, you can use the `AbstractStatistic` base class to build just
+and date, you can use the ``AbstractStatistic`` base class to build just
 that.
 
 
