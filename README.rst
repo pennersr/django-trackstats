@@ -119,7 +119,7 @@ Now, let's store some one-off statistics:
     StatisticByDate.objects.record(
         metric=Metric.objects.SHOPPING_ORDER_COUNT,
         value=n,
-        Period=Period.LIFETIME)
+        period=Period.LIFETIME)
 
     # Users signed up, at a specific date
     dt = date.today()
@@ -130,7 +130,7 @@ Now, let's store some one-off statistics:
     StatisticByDate.objects.record(
         metric=Metric.objects.USERS_USER_COUNT,
         value=n,
-        Period=Period.DAY)
+        period=Period.DAY)
 
 Creating code to store statistics yourself can be a tedious job.
 Luckily, a few shortcuts are available to track statistics without
