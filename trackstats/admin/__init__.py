@@ -1,6 +1,5 @@
-from django.conf.urls import url
+from django.urls import re_path
 from django.contrib import admin
-
 from django.template.response import TemplateResponse
 
 from trackstats.models import (
@@ -39,7 +38,7 @@ class StatisticGraphMixin(object):
     def get_urls(self):
         urls = super(StatisticGraphMixin, self).get_urls()
         custom_urls = [
-            url('^graph/$', self.graph,
+            re_path('^graph/$', self.graph,
                 name='trackstats_graph_' + self.graph_slug)
         ]
         return custom_urls + urls
