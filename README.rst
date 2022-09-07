@@ -20,7 +20,7 @@ Welcome to django-trackstats!
 
 Keep track of your statistics.
 
-- `Español (es)`_
+- `Español (es) <README.es.rst>`_
 
 Source code
   http://github.com/pennersr/django-trackstats
