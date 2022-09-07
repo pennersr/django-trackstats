@@ -20,6 +20,8 @@ Welcome to django-trackstats!
 
 Keep track of your statistics.
 
+- `Español (es)`_
+
 Source code
   http://github.com/pennersr/django-trackstats
 
