@@ -88,14 +88,6 @@ Utilizando poetry:
 
     poetry add git+https://github.com/pennersr/django-trackstats.git
 
-Por último, añade ``trackstats`` a ``INSTALLED_APPS`` en ``settings.py``
-
-.. code:: python
-
-    INSTALLED_APPS = [
-        'trackstats',
-    ]
-
 
 Utilización
 ===========
