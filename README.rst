@@ -69,6 +69,28 @@ Reference IDs
   string). Rationale: Having a human readable, non PK based, reference
   is esential as soon as you are going to export statistics.
 
+Installation
+============
+
+Using pip:
+
+.. code:: bash
+   
+    pip install git+https://github.com/pennersr/django-trackstats.git
+
+Using poetry:
+
+.. code:: bash
+
+    poetry add git+https://github.com/pennersr/django-trackstats.git
+
+Then add ``trackstats`` to your ``INSTALLED_APPS`` setting
+
+.. code:: python
+
+    INSTALLED_APPS = [
+        'trackstats',
+    ]
 
 Usage
 =====
