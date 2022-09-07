@@ -1,6 +1,6 @@
-=============================
+=================================
 Bienvenido/a a django-trackstats!
-=============================
+=================================
 
 .. image:: https://badge.fury.io/py/django-trackstats.svg
    :target: http://badge.fury.io/py/django-trackstats
@@ -25,7 +25,7 @@ Código fuente
 
 
 Casos de uso
-========
+============
 
 - Necesitas una solución elegante para almacenar estadísticas de una manera genérica y estructural.
 
@@ -40,7 +40,7 @@ están todas más allá del alcance de ``django-trackstats``.
 
 
 Conceptos
-========
+=========
 
 Los siguientes conceptos son utilizados:
 
@@ -73,7 +73,7 @@ IDs de referencia
 
 
 Instalación
-============
+===========
 
 Utilizando pip:
 
@@ -87,7 +87,7 @@ Utilizando poetry:
 
     poetry add git+https://github.com/pennersr/django-trackstats.git
 
-Then add ``trackstats`` to your ``INSTALLED_APPS`` setting
+Por último, añade ``trackstats`` a ``INSTALLED_APPS`` en ``settings.py``
 
 .. code:: python
 
@@ -95,10 +95,11 @@ Then add ``trackstats`` to your ``INSTALLED_APPS`` setting
         'trackstats',
     ]
 
-Usage
-=====
 
-First, setup your domains:
+Utilización
+===========
+
+Primero, configura tus dominios:
 
 .. code:: python
 
@@ -114,7 +115,7 @@ First, setup your domains:
         ref='twitter',
         name='Twitter')
 
-Define a few metrics:
+Define algunas métricas:
 
 .. code:: python
 
@@ -123,30 +124,30 @@ Define a few metrics:
     Metric.objects.SHOPPING_ORDER_COUNT = Metric.objects.register(
         domain=Domain.objects.SHOPPING,
         ref='order_count',
-        name='Number of orders sold')
+        name='Número de órdenes vendidas')
     Metric.objects.USERS_USER_COUNT = Metric.objects.register(
         domain=Domain.objects.USERS,
         ref='user_count',
-        name='Number of users signed up')
+        name='Cantidad de usuarios registrados')
     Metric.objects.TWITTER_FOLLOWER = Metric.objects.register(
         # Matches Twitter API
         ref='followers_count',
         domain=Domain.objects.TWITTER)
 
-Now, let's store some one-off statistics:
+Ahora, almacenemos algunas estadísticas simples:
 
 .. code:: python
 
     from trackstats.models import StatisticByDate, Domain, Metric, Period
 
-    # All-time, cumulative, statistic
+    # Estadísticas cumulativas para siempre
     n = Order.objects.all().count()
     StatisticByDate.objects.record(
         metric=Metric.objects.SHOPPING_ORDER_COUNT,
         value=n,
         period=Period.LIFETIME)
 
-    # Users signed up, at a specific date
+    # Usuarios registrados un día en específico
     dt = date.today()
     n = User.objects.filter(
         date_joined__day=dt.day,
@@ -157,12 +158,12 @@ Now, let's store some one-off statistics:
         value=n,
         period=Period.DAY)
 
-Creating code to store statistics yourself can be a tedious job.
-Luckily, a few shortcuts are available to track statistics without
-having to write any code yourself.
+Escribir código para almacenar estadísticas puede ser un trabajo tedioso.
+Por suerte, están disponibles algunos atajos para seguir estadísticas sin
+tener que escribir el código por tu cuenta.
 
-Consider you want to keep track of the number of comments created on a
-daily basis:
+Imagina que quieres guardar un registro de la cantidad de comentarios 
+creados diariamente:
 
 .. code:: python
 
@@ -173,40 +174,40 @@ daily basis:
         metric=Metric.objects.COMMENT_COUNT,
         date_field='timestamp').track(Comment.objects.all())
 
-Or, in case you want to track the number of comments, per user, on a daily
-basis:
+O, en caso de que quieras guardar registro del número de comentarios 
+por usuarios por usuario diariamente:
 
 .. code:: python
 
     CountObjectsByDateAndObjectTracker(
         period=Period.DAY,
         metric=Metric.objects.COMMENT_COUNT,
-        # comment.user points to a User
+        # comment.user apunta a un usuario
         object_model=User,
         object_field='user',
-        # Comment.timestamp is used for grouping
+        # Comment.timestamp es utilizado para agrupar
         date_field='timestamp').track(Comment.objects.all())
 
 
-Models
-======
+Modelos
+=======
 
-The ``StatisticByDate`` model represents statistics grouped by date --
-the most common use case.
+El modelo ``StatisticByDate`` representa estadísticas agrupadas por 
+día, el caso de uso que más comúnmente se da.
 
-Another common use case is to group by both date and some other object
-(e.g. a user, category, site).  For this, use
-``StatisticByDateAndObject``. It uses a generic foreign key.
+Otro caso de uso frecuente es agrupar una fecha y algún otro modelo
+(ej: Un usuario, categoría, sitio).  Para esto, utiliza
+``StatisticByDateAndObject``. Este usa un campo
+``django.models.ForeignKey``.
 
-If you need to group in a different manner, e.g. by country, province
-and date, you can use the ``AbstractStatistic`` base class to build just
-that.
+Si necesitas agrupar de diferente manera, por ejemplo, por pais, provincia
+y fecha, puedes extender la clase base ``AbstractStatistic`` para hacerlo.
 
 
 Cross-Selling
 =============
 
-If you like this, you may also like:
+Si te gusta este proyecto, probablemente también te gusten estos:
 
 - django-allauth: https://github.com/pennersr/django-allauth
 - netwell: https://github.com/pennersr/netwell
