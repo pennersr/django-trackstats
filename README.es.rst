@@ -20,9 +20,10 @@ Bienvenido/a a django-trackstats!
 
 Mantén un registro de tus estadísticas.
 
+- `English (en) <README.rst>`_
+
 Código fuente
   http://github.com/pennersr/django-trackstats
-
 
 Casos de uso
 ============
