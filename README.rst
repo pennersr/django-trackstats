@@ -20,6 +20,8 @@ Welcome to django-trackstats!
 
 Keep track of your statistics.
 
+- `Español (es) <README.es.rst>`_
+
 Source code
   http://github.com/pennersr/django-trackstats
 
@@ -68,6 +70,21 @@ Reference IDs
   Domains and metrics must be assigned unique reference IDs (of type
   string). Rationale: Having a human readable, non PK based, reference
   is esential as soon as you are going to export statistics.
+
+Installation
+============
+
+Using pip:
+
+.. code:: bash
+   
+    pip install git+https://github.com/pennersr/django-trackstats.git
+
+Using poetry:
+
+.. code:: bash
+
+    poetry add git+https://github.com/pennersr/django-trackstats.git
 
 
 Usage

@@ -4,22 +4,29 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
 from django.utils.functional import SimpleLazyObject, empty
+from django.utils.translation import gettext as _
 
 
 class Period(object):
+    MINUTE = 60
+    HOUR = 3600
     DAY = 86400  # seconds
     WEEK = DAY * 7
     DAYS_28 = DAY * 28
     MONTH = DAY * 30
+    YEAR = DAY * 365
     LIFETIME = 0
 
 
 PERIOD_CHOICES = (
-    (Period.DAY, 'Day'),
-    (Period.WEEK, 'Week'),
-    (Period.DAYS_28, '28 days'),
-    (Period.MONTH, 'Month'),
-    (Period.LIFETIME, 'Lifetime'))
+    (Period.MINUTE, _('Minute')),
+    (Period.HOUR, _('Hour')),
+    (Period.DAY, _('Day')),
+    (Period.WEEK, _('Week')),
+    (Period.DAYS_28, _('28 days')),
+    (Period.MONTH, _('Month')),
+    (Period.YEAR, _('Year'),
+    (Period.LIFETIME, _('Lifetime')))
 
 
 class RegisterLazilyManagerMixin(object):
@@ -67,11 +74,11 @@ class Domain(models.Model):
     ref = models.CharField(
         max_length=100,
         unique=True,
-        help_text="Unique reference ID for this domain")
+        help_text=_("Unique reference ID for this domain"))
     name = models.CharField(
         max_length=100,
         blank=True,
-        help_text="Short descriptive name")
+        help_text=_("Short descriptive name"))
 
     def __str__(self):
         return self.name or self.ref
@@ -100,14 +107,14 @@ class Metric(models.Model):
     domain = models.ForeignKey(Domain, on_delete=models.PROTECT)
     ref = models.CharField(
         max_length=100,
-        help_text="Unique reference ID for this metric within the domain")
+        help_text=_("Unique reference ID for this metric within the domain"))
     name = models.CharField(
         max_length=100,
         blank=True,
-        help_text="Short descriptive name")
+        help_text=_("Short descriptive name"))
     description = models.TextField(
         blank=True,
-        help_text="Description")
+        help_text=_("Description"))
 
     class Meta:
         unique_together = ('domain', 'ref')
@@ -263,8 +270,8 @@ class StatisticByDate(ByDateMixin, AbstractStatistic):
             'date',
             'metric',
             'period']
-        verbose_name = 'Statistic by date'
-        verbose_name_plural = 'Statistics by date'
+        verbose_name = _('Statistic by date')
+        verbose_name_plural = _('Statistics by date')
 
     def __str__(self):
         return '{date}: {value}'.format(
@@ -285,8 +292,8 @@ class StatisticByDateAndObject(
             'object_type',
             'object_id',
             'period']
-        verbose_name = 'Statistic by date and object'
-        verbose_name_plural = 'Statistics by date and object'
+        verbose_name = _('Statistic by date and object')
+        verbose_name_plural = _('Statistics by date and object')
 
     def __str__(self):
         return '{date}: {value}'.format(
