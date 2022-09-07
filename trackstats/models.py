@@ -14,6 +14,7 @@ class Period(object):
     WEEK = DAY * 7
     DAYS_28 = DAY * 28
     MONTH = DAY * 30
+    YEAR = DAY * 365
     LIFETIME = 0
 
 
@@ -24,6 +25,7 @@ PERIOD_CHOICES = (
     (Period.WEEK, _('Week')),
     (Period.DAYS_28, _('28 days')),
     (Period.MONTH, _('Month')),
+    (Period.YEAR, _('Year'),
     (Period.LIFETIME, _('Lifetime')))
 
 
