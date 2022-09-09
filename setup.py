@@ -48,7 +48,7 @@ setup(
     author='Raymond Penners',
     author_email='raymond.penners@intenct.nl',
     platforms=['any'],
-    packages=find_packages(),
+    packages=['trackstats'],
     include_package_data=True,
     install_requires=[
         'django>=3.2.13',
