@@ -25,4 +25,7 @@ jobs:
           python-version: '3.10'
       - run: pip install --upgrade pip
       - run: pip install tox
+      - run: pip install "coverage>=3.7.1" coveralls
       - run: tox -e ${{ matrix.job }}
+      - run: coverage report
+      - run: coveralls
