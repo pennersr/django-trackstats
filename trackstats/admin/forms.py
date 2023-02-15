@@ -1,4 +1,4 @@
-from datetime import timedelta, date
+from datetime import date, timedelta
 
 from django import forms
 from django.contrib.contenttypes.models import ContentType

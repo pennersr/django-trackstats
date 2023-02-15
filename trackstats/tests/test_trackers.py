@@ -2,23 +2,15 @@ import random
 from collections import Counter
 from datetime import date, timedelta
 
-from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.utils import timezone
 
-from trackstats.models import (
-    Domain,
-    Metric,
-    StatisticByDate,
-    StatisticByDateAndObject,
-    Period,
-)
-from trackstats.trackers import (
-    CountObjectsByDateTracker,
-    CountObjectsByDateAndObjectTracker,
-)
-
+from trackstats.models import (Domain, Metric, Period, StatisticByDate,
+                               StatisticByDateAndObject)
 from trackstats.tests.models import Comment
+from trackstats.trackers import (CountObjectsByDateAndObjectTracker,
+                                 CountObjectsByDateTracker)
 
 
 def to_date(dt):

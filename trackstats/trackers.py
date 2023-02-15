@@ -1,9 +1,8 @@
-from datetime import date, timedelta, datetime, time
+from datetime import date, datetime, time, timedelta
 
-from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
-from django.db import models
-from django.db import connections
+from django.contrib.contenttypes.models import ContentType
+from django.db import connections, models
 from django.utils import timezone
 
 from .models import Period, StatisticByDate, StatisticByDateAndObject

@@ -1,9 +1,10 @@
-from django.urls import re_path
 from django.contrib import admin
 from django.template.response import TemplateResponse
+from django.urls import re_path
 
-from trackstats.models import Domain, Metric, StatisticByDate, StatisticByDateAndObject
-from trackstats.admin.forms import GraphByDateForm, GraphByDateAndObjectForm
+from trackstats.admin.forms import GraphByDateAndObjectForm, GraphByDateForm
+from trackstats.models import (Domain, Metric, StatisticByDate,
+                               StatisticByDateAndObject)
 
 
 @admin.register(Domain)

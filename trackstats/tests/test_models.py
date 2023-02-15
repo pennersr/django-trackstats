@@ -1,15 +1,10 @@
 from datetime import date
 
-from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 
-from trackstats.models import (
-    Domain,
-    Metric,
-    StatisticByDate,
-    Period,
-    StatisticByDateAndObject,
-)
+from trackstats.models import (Domain, Metric, Period, StatisticByDate,
+                               StatisticByDateAndObject)
 
 User = get_user_model()
 
