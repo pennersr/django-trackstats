@@ -10,7 +10,7 @@ from .models import Period, StatisticByDate, StatisticByDateAndObject
 
 
 class ObjectsByDateTracker(object):
-    date_field = 'date'
+    date_field = "date"
     aggr_op = None
     metric = None
     period = None
@@ -21,15 +21,12 @@ class ObjectsByDateTracker(object):
             setattr(self, prop, val)
 
     def get_most_recent_kwargs(self):
-        most_recent_kwargs = {
-            'metric': self.metric,
-            'period': self.period}
+        most_recent_kwargs = {"metric": self.metric, "period": self.period}
         return most_recent_kwargs
 
     def get_start_date(self, qs):
         most_recent_kwargs = self.get_most_recent_kwargs()
-        last_stat = self.statistic_model.objects.most_recent(
-            **most_recent_kwargs)
+        last_stat = self.statistic_model.objects.most_recent(**most_recent_kwargs)
         if last_stat:
             start_date = last_stat.date
         else:
@@ -46,15 +43,11 @@ class ObjectsByDateTracker(object):
         return start_date
 
     def track_lifetime_upto(self, qs, upto_date):
-        filter_kwargs = {
-            self.date_field + '__date__lte': upto_date
-        }
+        filter_kwargs = {self.date_field + "__date__lte": upto_date}
         n = qs.filter(**filter_kwargs).count()
         self.statistic_model.objects.record(
-            metric=self.metric,
-            value=n,
-            period=self.period,
-            date=upto_date)
+            metric=self.metric, value=n, period=self.period, date=upto_date
+        )
 
     def get_track_values(self):
         return []
@@ -75,45 +68,47 @@ class ObjectsByDateTracker(object):
                 self.track_lifetime_upto(qs, upto_date)
                 upto_date += timedelta(days=1)
         elif self.period == Period.DAY:
-            values_fields = ['ts_date'] + self.get_track_values()
+            values_fields = ["ts_date"] + self.get_track_values()
             connection = connections[qs.db]
-            tzname = (
-                timezone.get_current_timezone_name()
-                if settings.USE_TZ else None)
+            tzname = timezone.get_current_timezone_name() if settings.USE_TZ else None
 
-            is_datetime = isinstance(qs.model._meta.get_field(
-                self.date_field), models.DateTimeField)
+            is_datetime = isinstance(
+                qs.model._meta.get_field(self.date_field), models.DateTimeField
+            )
             if is_datetime:
                 date_sql = connection.ops.datetime_cast_date_sql(
-                    self.date_field,
-                    tzname)
+                    self.date_field, tzname
+                )
                 # before django 2.0 it returns a tuple
                 if isinstance(date_sql, tuple):
                     vals = qs.extra(
-                        select={"ts_date": date_sql[0]},
-                        select_params=date_sql[1])
+                        select={"ts_date": date_sql[0]}, select_params=date_sql[1]
+                    )
                 else:
                     vals = qs.extra(select={"ts_date": date_sql})
-                start_dt = datetime.combine(
-                    start_date, time()) - timedelta(days=1)
+                start_dt = datetime.combine(start_date, time()) - timedelta(days=1)
                 if tzname:
                     start_dt = timezone.make_aware(
-                        start_dt,
-                        timezone.get_current_timezone())
+                        start_dt, timezone.get_current_timezone()
+                    )
             else:
                 vals = qs.extra(select={"ts_date": self.date_field})
                 start_dt = start_date
-            vals = vals.filter(
-                **{self.date_field + '__gte': start_dt}).values(
-                *values_fields).order_by().annotate(ts_n=self.aggr_op)
+            vals = (
+                vals.filter(**{self.date_field + "__gte": start_dt})
+                .values(*values_fields)
+                .order_by()
+                .annotate(ts_n=self.aggr_op)
+            )
             # TODO: Bulk create
             for val in vals:
                 self.statistic_model.objects.record(
                     metric=self.metric,
-                    value=val['ts_n'],
-                    date=val['ts_date'],
+                    value=val["ts_n"],
+                    date=val["ts_date"],
                     period=self.period,
-                    **self.get_record_kwargs(val))
+                    **self.get_record_kwargs(val)
+                )
         else:
             raise NotImplementedError
 
@@ -130,32 +125,31 @@ class ObjectsByDateAndObjectTracker(ObjectsByDateTracker):
         assert self.object or self.object_field
 
     def get_most_recent_kwargs(self):
-        kwargs = super(
-            ObjectsByDateAndObjectTracker, self).get_most_recent_kwargs()
+        kwargs = super(ObjectsByDateAndObjectTracker, self).get_most_recent_kwargs()
         if self.object_model:
-            kwargs['object_type'] = ContentType.objects.get_for_model(
-                self.object_model)
+            kwargs["object_type"] = ContentType.objects.get_for_model(self.object_model)
         else:
-            kwargs['object'] = self.object
+            kwargs["object"] = self.object
         return kwargs
 
     def track_lifetime_upto(self, qs, upto_date):
-        filter_kwargs = {
-            self.date_field + '__date__lte': upto_date
-        }
+        filter_kwargs = {self.date_field + "__date__lte": upto_date}
         if self.object_model:
-            vals = qs.filter(**filter_kwargs).values(
-                self.object_field).annotate(ts_n=self.aggr_op)
+            vals = (
+                qs.filter(**filter_kwargs)
+                .values(self.object_field)
+                .annotate(ts_n=self.aggr_op)
+            )
             for val in vals:
-                object = self.object_model(
-                    pk=val[self.object_field])
+                object = self.object_model(pk=val[self.object_field])
                 # TODO: Bulk create
                 StatisticByDateAndObject.objects.record(
                     metric=self.metric,
-                    value=val['ts_n'],
+                    value=val["ts_n"],
                     date=upto_date,
                     object=object,
-                    period=self.period)
+                    period=self.period,
+                )
         else:
             n = qs.filter(**filter_kwargs).count()
             StatisticByDateAndObject.objects.record(
@@ -163,7 +157,8 @@ class ObjectsByDateAndObjectTracker(ObjectsByDateTracker):
                 value=n,
                 object=self.object,
                 period=self.period,
-                date=upto_date)
+                date=upto_date,
+            )
 
     def get_track_values(self):
         ret = super(ObjectsByDateAndObjectTracker, self).get_track_values()
@@ -176,12 +171,12 @@ class ObjectsByDateAndObjectTracker(ObjectsByDateTracker):
             object = self.object_model(pk=val[self.object_field])
         else:
             object = self.object
-        return {'object': object}
+        return {"object": object}
 
 
 class CountObjectsByDateTracker(ObjectsByDateTracker):
-    aggr_op = models.Count('pk', distinct=True)
+    aggr_op = models.Count("pk", distinct=True)
 
 
 class CountObjectsByDateAndObjectTracker(ObjectsByDateAndObjectTracker):
-    aggr_op = models.Count('pk', distinct=True)
+    aggr_op = models.Count("pk", distinct=True)

@@ -11,68 +11,171 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
+        ("contenttypes", "0002_remove_content_type_name"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Domain',
+            name="Domain",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('ref', models.CharField(help_text='Unique reference ID for this domain', max_length=100, unique=True)),
-                ('name', models.CharField(blank=True, help_text='Short descriptive name', max_length=100)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "ref",
+                    models.CharField(
+                        help_text="Unique reference ID for this domain",
+                        max_length=100,
+                        unique=True,
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        blank=True, help_text="Short descriptive name", max_length=100
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Metric',
+            name="Metric",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('ref', models.CharField(help_text='Unique reference ID for this metric within the domain', max_length=100)),
-                ('name', models.CharField(blank=True, help_text='Short descriptive name', max_length=100)),
-                ('description', models.TextField(blank=True, help_text='Description')),
-                ('domain', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='trackstats.Domain')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "ref",
+                    models.CharField(
+                        help_text="Unique reference ID for this metric within the domain",
+                        max_length=100,
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        blank=True, help_text="Short descriptive name", max_length=100
+                    ),
+                ),
+                ("description", models.TextField(blank=True, help_text="Description")),
+                (
+                    "domain",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="trackstats.Domain",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='StatisticByDate',
+            name="StatisticByDate",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('value', models.BigIntegerField(null=True)),
-                ('period', models.IntegerField(choices=[(86400, 'Day'), (604800, 'Week'), (2419200, '28 days'), (2592000, 'Month'), (0, 'Lifetime')])),
-                ('date', models.DateField(db_index=True)),
-                ('metric', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='trackstats.Metric')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("value", models.BigIntegerField(null=True)),
+                (
+                    "period",
+                    models.IntegerField(
+                        choices=[
+                            (86400, "Day"),
+                            (604800, "Week"),
+                            (2419200, "28 days"),
+                            (2592000, "Month"),
+                            (0, "Lifetime"),
+                        ]
+                    ),
+                ),
+                ("date", models.DateField(db_index=True)),
+                (
+                    "metric",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="trackstats.Metric",
+                    ),
+                ),
             ],
             options={
-                'verbose_name_plural': 'Statistics by date',
-                'verbose_name': 'Statistic by date',
+                "verbose_name_plural": "Statistics by date",
+                "verbose_name": "Statistic by date",
             },
         ),
         migrations.CreateModel(
-            name='StatisticByDateAndObject',
+            name="StatisticByDateAndObject",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('value', models.BigIntegerField(null=True)),
-                ('period', models.IntegerField(choices=[(86400, 'Day'), (604800, 'Week'), (2419200, '28 days'), (2592000, 'Month'), (0, 'Lifetime')])),
-                ('object_id', models.PositiveIntegerField()),
-                ('date', models.DateField(db_index=True)),
-                ('metric', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='trackstats.Metric')),
-                ('object_type', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='contenttypes.ContentType')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("value", models.BigIntegerField(null=True)),
+                (
+                    "period",
+                    models.IntegerField(
+                        choices=[
+                            (86400, "Day"),
+                            (604800, "Week"),
+                            (2419200, "28 days"),
+                            (2592000, "Month"),
+                            (0, "Lifetime"),
+                        ]
+                    ),
+                ),
+                ("object_id", models.PositiveIntegerField()),
+                ("date", models.DateField(db_index=True)),
+                (
+                    "metric",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="trackstats.Metric",
+                    ),
+                ),
+                (
+                    "object_type",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="contenttypes.ContentType",
+                    ),
+                ),
             ],
             options={
-                'verbose_name_plural': 'Statistics by date and object',
-                'verbose_name': 'Statistic by date and object',
+                "verbose_name_plural": "Statistics by date and object",
+                "verbose_name": "Statistic by date and object",
             },
         ),
         migrations.AlterUniqueTogether(
-            name='statisticbydateandobject',
-            unique_together=set([('date', 'metric', 'object_type', 'object_id', 'period')]),
+            name="statisticbydateandobject",
+            unique_together=set(
+                [("date", "metric", "object_type", "object_id", "period")]
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='statisticbydate',
-            unique_together=set([('date', 'metric', 'period')]),
+            name="statisticbydate",
+            unique_together=set([("date", "metric", "period")]),
         ),
         migrations.AlterUniqueTogether(
-            name='metric',
-            unique_together=set([('domain', 'ref')]),
+            name="metric",
+            unique_together=set([("domain", "ref")]),
         ),
     ]

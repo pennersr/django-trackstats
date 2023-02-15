@@ -15,11 +15,12 @@ class Period(object):
 
 
 PERIOD_CHOICES = (
-    (Period.DAY, 'Day'),
-    (Period.WEEK, 'Week'),
-    (Period.DAYS_28, '28 days'),
-    (Period.MONTH, 'Month'),
-    (Period.LIFETIME, 'Lifetime'))
+    (Period.DAY, "Day"),
+    (Period.WEEK, "Week"),
+    (Period.DAYS_28, "28 days"),
+    (Period.MONTH, "Month"),
+    (Period.LIFETIME, "Lifetime"),
+)
 
 
 class RegisterLazilyManagerMixin(object):
@@ -51,11 +52,8 @@ class RegisterLazilyManagerMixin(object):
 
 
 class DomainManager(RegisterLazilyManagerMixin, models.Manager):
-
-    def register(self, ref, name=''):
-        return super(DomainManager, self)._register(
-            defaults={'name': name},
-            ref=ref)
+    def register(self, ref, name=""):
+        return super(DomainManager, self)._register(defaults={"name": name}, ref=ref)
 
     def get_by_natural_key(self, ref):
         return self.get(ref=ref)
@@ -65,13 +63,11 @@ class Domain(models.Model):
     objects = DomainManager()
 
     ref = models.CharField(
-        max_length=100,
-        unique=True,
-        help_text="Unique reference ID for this domain")
+        max_length=100, unique=True, help_text="Unique reference ID for this domain"
+    )
     name = models.CharField(
-        max_length=100,
-        blank=True,
-        help_text="Short descriptive name")
+        max_length=100, blank=True, help_text="Short descriptive name"
+    )
 
     def __str__(self):
         return self.name or self.ref
@@ -81,17 +77,13 @@ class Domain(models.Model):
 
 
 class MetricManager(RegisterLazilyManagerMixin, models.Manager):
-
-    def register(self, domain, ref, name='', description=''):
+    def register(self, domain, ref, name="", description=""):
         return super(MetricManager, self)._register(
-            defaults={'name': name,
-                      'description': description},
-            domain=domain,
-            ref=ref)
+            defaults={"name": name, "description": description}, domain=domain, ref=ref
+        )
 
     def get_by_natural_key(self, domain, ref):
-        return self.get(source=domain,
-                        ref=ref)
+        return self.get(source=domain, ref=ref)
 
 
 class Metric(models.Model):
@@ -100,17 +92,15 @@ class Metric(models.Model):
     domain = models.ForeignKey(Domain, on_delete=models.PROTECT)
     ref = models.CharField(
         max_length=100,
-        help_text="Unique reference ID for this metric within the domain")
+        help_text="Unique reference ID for this metric within the domain",
+    )
     name = models.CharField(
-        max_length=100,
-        blank=True,
-        help_text="Short descriptive name")
-    description = models.TextField(
-        blank=True,
-        help_text="Description")
+        max_length=100, blank=True, help_text="Short descriptive name"
+    )
+    description = models.TextField(blank=True, help_text="Description")
 
     class Meta:
-        unique_together = ('domain', 'ref')
+        unique_together = ("domain", "ref")
 
     def __str__(self):
         return self.name or self.ref
@@ -136,21 +126,20 @@ class AbstractStatisticQuerySet(models.QuerySet):
 
     def record(self, metric, value, period, **kwargs):
         instance, _ = self.update_or_create(
-            period=period,
-            metric=metric,
-            defaults={'value': value},
-            **kwargs)
+            period=period, metric=metric, defaults={"value": value}, **kwargs
+        )
         return instance
 
     def most_recent(self, **kwargs):
-        return self.narrow(**kwargs).order_by('-' + self.order_field).first()
+        return self.narrow(**kwargs).order_by("-" + self.order_field).first()
 
 
 class AbstractStatistic(models.Model):
     metric = models.ForeignKey(Metric, on_delete=models.PROTECT)
     value = models.BigIntegerField(
         # To support storing that no data is available, use: NULL
-        null=True)
+        null=True
+    )
     period = models.IntegerField(choices=PERIOD_CHOICES)
 
     class Meta:
@@ -160,29 +149,25 @@ class AbstractStatistic(models.Model):
 class ByObjectMixin(models.Model):
     object_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
     object_id = models.PositiveIntegerField()
-    object = GenericForeignKey(
-        'object_type',
-        'object_id')
+    object = GenericForeignKey("object_type", "object_id")
 
     class Meta:
         abstract = True
 
 
 class ByObjectQuerySetMixin(object):
-
     def record(self, **kwargs):
-        object = kwargs.pop('object')
+        object = kwargs.pop("object")
         ct = ContentType.objects.get_for_model(object)
         return super(ByObjectQuerySetMixin, self).record(
-            object_id=object.pk,
-            object_type=ct,
-            **kwargs)
+            object_id=object.pk, object_type=ct, **kwargs
+        )
 
     def narrow(self, **kwargs):
         qs = self
-        object = kwargs.pop('object', None)
-        objects = kwargs.pop('objects', None)
-        object_type = kwargs.pop('object_type', None)
+        object = kwargs.pop("object", None)
+        objects = kwargs.pop("objects", None)
+        object_type = kwargs.pop("object_type", None)
         assert object is None or objects is None
         if object is not None:
             objects = [object]
@@ -194,15 +179,12 @@ class ByObjectQuerySetMixin(object):
             else:
                 # Assumption: all objects are of same type
                 ct = ContentType.objects.get_for_model(objects[0])
-                qs = qs.filter(
-                    object_type=ct,
-                    object_id__in=[s.pk for s in objects])
+                qs = qs.filter(object_type=ct, object_id__in=[s.pk for s in objects])
         elif isinstance(objects, models.QuerySet):
             ct = ContentType.objects.get_for_model(objects.model)
             qs = qs.filter(
-                object_type=ct,
-                object_id__in=objects.values_list(
-                    'id', flat=True))
+                object_type=ct, object_id__in=objects.values_list("id", flat=True)
+            )
         elif objects is None:
             pass
         elif isinstance(objects, models.query.EmptyQuerySet):
@@ -221,17 +203,17 @@ class ByDateMixin(models.Model):
 
 class ByDateQuerySetMixin(object):
 
-    order_field = 'date'
+    order_field = "date"
 
     def record(self, **kwargs):
-        dt = kwargs.pop('date', date.today())
+        dt = kwargs.pop("date", date.today())
         return super(ByDateQuerySetMixin, self).record(date=dt, **kwargs)
 
     def narrow(self, **kwargs):
         """Up-to including"""
-        from_date = kwargs.pop('from_date', None)
-        to_date = kwargs.pop('to_date', None)
-        date = kwargs.pop('date', None)
+        from_date = kwargs.pop("from_date", None)
+        to_date = kwargs.pop("to_date", None)
+        date = kwargs.pop("date", None)
         qs = self
         if from_date:
             qs = qs.filter(date__gte=from_date)
@@ -242,16 +224,13 @@ class ByDateQuerySetMixin(object):
         return super(ByDateQuerySetMixin, qs).narrow(**kwargs)
 
 
-class StatisticByDateQuerySet(
-        ByDateQuerySetMixin,
-        AbstractStatisticQuerySet):
+class StatisticByDateQuerySet(ByDateQuerySetMixin, AbstractStatisticQuerySet):
     pass
 
 
 class StatisticByDateAndObjectQuerySet(
-        ByDateQuerySetMixin,
-        ByObjectQuerySetMixin,
-        AbstractStatisticQuerySet):
+    ByDateQuerySetMixin, ByObjectQuerySetMixin, AbstractStatisticQuerySet
+):
     pass
 
 
@@ -259,36 +238,21 @@ class StatisticByDate(ByDateMixin, AbstractStatistic):
     objects = StatisticByDateQuerySet.as_manager()
 
     class Meta:
-        unique_together = [
-            'date',
-            'metric',
-            'period']
-        verbose_name = 'Statistic by date'
-        verbose_name_plural = 'Statistics by date'
+        unique_together = ["date", "metric", "period"]
+        verbose_name = "Statistic by date"
+        verbose_name_plural = "Statistics by date"
 
     def __str__(self):
-        return '{date}: {value}'.format(
-            date=self.date,
-            value=self.value)
+        return "{date}: {value}".format(date=self.date, value=self.value)
 
 
-class StatisticByDateAndObject(
-        ByDateMixin,
-        ByObjectMixin,
-        AbstractStatistic):
+class StatisticByDateAndObject(ByDateMixin, ByObjectMixin, AbstractStatistic):
     objects = StatisticByDateAndObjectQuerySet.as_manager()
 
     class Meta:
-        unique_together = [
-            'date',
-            'metric',
-            'object_type',
-            'object_id',
-            'period']
-        verbose_name = 'Statistic by date and object'
-        verbose_name_plural = 'Statistics by date and object'
+        unique_together = ["date", "metric", "object_type", "object_id", "period"]
+        verbose_name = "Statistic by date and object"
+        verbose_name_plural = "Statistics by date and object"
 
     def __str__(self):
-        return '{date}: {value}'.format(
-            date=self.date,
-            value=self.value)
+        return "{date}: {value}".format(date=self.date, value=self.value)
