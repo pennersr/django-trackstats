@@ -103,9 +103,9 @@ Define a few metrics:
         domain=Domain.objects.USERS,
         ref='user_count',
         name='Number of users signed up')
-    Metric.objects.TWITTER_FOLLOWER = Metric.objects.register(
+    Metric.objects.TWITTER_FOLLOWER_COUNT = Metric.objects.register(
         # Matches Twitter API
-        ref='followers_count',
+        ref='follower_count',
         domain=Domain.objects.TWITTER)
 
 Now, let's store some one-off statistics:
