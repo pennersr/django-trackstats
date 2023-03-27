@@ -32,6 +32,9 @@ jobs:
         DJANGO: ${{ matrix.django-version }}
   extra:
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        extra-env: ['checkqa']
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 3.7

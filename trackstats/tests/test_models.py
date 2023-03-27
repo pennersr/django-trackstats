@@ -11,6 +11,7 @@ from trackstats.models import (
     StatisticByDateAndObject,
 )
 
+
 User = get_user_model()
 
 
