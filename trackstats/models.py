@@ -40,7 +40,8 @@ class RegisterLazilyManagerMixin(object):
             ref='users',
             name='User Accounts')
         """
-        f = lambda: self.update_or_create(defaults=defaults, **kwargs)[0]
+        def f():
+            return self.update_or_create(defaults=defaults, **kwargs)[0]
         ret = SimpleLazyObject(f)
         self._lazy_entries.append(ret)
         return ret
