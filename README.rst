@@ -8,7 +8,7 @@ Welcome to django-trackstats!
 .. image:: https://img.shields.io/pypi/v/django-trackstats.svg
    :target: https://pypi.python.org/pypi/django-trackstats
 
-.. image:: https://coveralls.io/repos/pennersr/django-trackstats/badge.svg?branch=master
+.. image:: https://coveralls.io/repos/pennersr/django-trackstats/badge.svg?branch=main
    :alt: Coverage Status
    :target: https://coveralls.io/r/pennersr/django-trackstats
 
