@@ -6,7 +6,7 @@
 /_/ /_/   \__,_/\___/_/|_|/____/\__/\__,_/\__/____/
 
 """  # noqa
-VERSION = (0, 6, 2, "final", 0)
+VERSION = (0, 7, 0, "final", 0)
 
 __title__ = "django-trackstats"
 __version_info__ = VERSION
